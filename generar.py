@@ -77,9 +77,118 @@ def fondo(tema, filas):
     return png(ANCHO, alto, pix)
 
 
+# ---------------- Skylar ----------------
+# La perrita de Fran (oct-2026), sacada de sus fotos: cuerpo negro rizado, pecho y guata blancos,
+# patas blancas con pintas negras, barba blanca con nariz negra grande, cejas y mejillas color
+# canela, orejas negras y cola negra con la punta blanca.
+# Va encima del lobo de Fresh Animations (64x32, mismo lugar de cada parte que el lobo normal,
+# mas sus ojos propios). Cada caja de Minecraft se despliega asi, con (u, v) la esquina y w, h, d
+# el ancho, alto y fondo: arriba (u+d, v), abajo (u+d+w, v), lado (u, v+d), frente (u+d, v+d),
+# otro lado (u+d+w, v+d), atras (u+2d+w, v+d). El cuerpo y el cuello van girados 90 grados: su
+# "frente" es la guata y su "atras" el lomo.
+NEGRO = [(26, 24, 28), (38, 35, 40), (18, 17, 20), (48, 44, 50)]
+BLANCO = [(238, 236, 231), (224, 222, 216), (246, 245, 241), (210, 208, 203)]
+CANELA = [(196, 150, 98), (178, 130, 80), (210, 168, 116)]
+GRIS = [(196, 194, 190), (176, 174, 170)]
+
+
+def skylar():
+    import random
+    azar = random.Random(7)  # siempre la misma textura
+    pix = [[(0, 0, 0, 0)] * 64 for _ in range(32)]
+    def pinta(x, y, paleta):
+        pix[y][x] = azar.choice(paleta) + (255,)
+    def caja(x0, y0, x1, y1, paleta):  # x1, y1 sin incluir
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                pinta(x, y, paleta)
+    def pintas(x0, y0, x1, y1, cuantas):  # puntitos negros sobre lo blanco
+        for _ in range(cuantas):
+            pinta(azar.randrange(x0, x1), azar.randrange(y0, y1), NEGRO[:3])
+
+    # Cabeza: u0 v0, 6x6x4
+    caja(4, 0, 10, 4, NEGRO)                       # arriba, rizos negros
+    caja(10, 0, 16, 4, BLANCO)                     # abajo (debajo de la mandibula)
+    caja(0, 4, 4, 10, NEGRO); caja(10, 4, 14, 10, NEGRO)   # lados
+    caja(2, 7, 4, 10, BLANCO); caja(10, 7, 12, 10, BLANCO)  # barba que se ve de lado
+    pinta(3, 7, CANELA); pinta(10, 7, CANELA)      # mejillas canela
+    caja(4, 4, 10, 10, NEGRO)                      # cara
+    for x in (5, 8):
+        pinta(x, 5, CANELA)                        # cejas canela, sobre los ojos
+    pinta(4, 5, CANELA); pinta(9, 5, CANELA)
+    caja(4, 8, 10, 10, BLANCO)                     # barba bajo el hocico
+    pinta(4, 7, CANELA); pinta(9, 7, CANELA)       # mejillas
+    caja(14, 4, 20, 10, NEGRO)                     # nuca
+
+    # Hocico: u1 v11, 3x3x3
+    caja(4, 11, 7, 14, BLANCO)                     # arriba, blanco
+    pinta(4, 11, GRIS); pinta(6, 11, GRIS)
+    caja(7, 11, 10, 14, BLANCO)                    # abajo
+    caja(1, 14, 13, 17, BLANCO)                    # lados, frente y atras
+    pinta(3, 14, CANELA); pinta(7, 14, CANELA)     # canela atras de las mejillas
+    pix[14][5] = (14, 13, 15, 255); pix[15][5] = (14, 13, 15, 255)  # nariz negra grande
+    pix[14][4] = (40, 38, 42, 255); pix[14][6] = (40, 38, 42, 255)
+
+    # Ojos de Fresh Animations: oscuros, como los de ella
+    for (x, y) in ((11, 13), (12, 13), (15, 13), (16, 13), (12, 12), (15, 12)):
+        pix[y][x] = (82, 54, 36, 255)
+    pix[11][12] = (12, 10, 10, 255); pix[11][15] = (12, 10, 10, 255)
+
+    # Orejas: u16 v14, 2x2x1, negras
+    caja(16, 14, 22, 17, NEGRO)
+
+    # Cuello (mane): u21 v0, 8x6x7
+    caja(28, 0, 36, 7, NEGRO); caja(28, 3, 36, 7, BLANCO)  # frente: arriba negro, pecho blanco
+    caja(36, 0, 44, 7, NEGRO)                      # hacia el cuerpo
+    caja(21, 7, 28, 13, NEGRO); caja(25, 7, 28, 13, BLANCO)  # lado: abajo blanco
+    caja(36, 7, 43, 13, NEGRO); caja(36, 7, 39, 13, BLANCO)  # otro lado
+    caja(28, 7, 36, 13, BLANCO)                    # bajo el cuello: pecho blanco
+    caja(43, 7, 51, 13, NEGRO)                     # lomo del cuello
+
+    # Cuerpo: u18 v14, 6x9x6
+    caja(24, 14, 30, 20, NEGRO); caja(24, 17, 30, 20, BLANCO)  # parte de adelante: pecho blanco abajo
+    caja(30, 14, 36, 20, NEGRO)                    # parte de atras (anca)
+    caja(18, 20, 24, 29, NEGRO); caja(36, 20, 42, 29, NEGRO)   # un lado y el lomo
+    caja(30, 20, 36, 29, NEGRO)                    # otro lado
+    caja(21, 20, 24, 24, BLANCO); pintas(21, 20, 24, 24, 3)    # mancha blanca con pintas, adelante
+    caja(30, 20, 33, 24, BLANCO); pintas(30, 20, 33, 24, 3)
+    caja(24, 20, 30, 29, BLANCO); pintas(24, 25, 30, 29, 4)    # guata blanca
+
+    # Patas: u0 v18, 2x8x2, blancas con pintas, arriba negras
+    caja(2, 18, 4, 20, NEGRO); caja(4, 18, 6, 20, BLANCO)
+    caja(0, 20, 8, 28, BLANCO)
+    caja(0, 20, 8, 21, NEGRO)
+    pintas(0, 21, 8, 26, 6)
+
+    # Cola: u9 v18, 2x8x2, negra con la punta blanca
+    caja(11, 18, 13, 20, NEGRO); caja(13, 18, 15, 20, BLANCO)
+    caja(9, 20, 17, 28, NEGRO); caja(9, 25, 17, 28, BLANCO)
+    return png(64, 32, pix)
+
+
+# Las 9 razas de lobo de 26.x, cada una con su textura normal, mansa y enojada. Un lobo llamado
+# Skylar usa la de ella en cualquiera (Entity Texture Features, del modpack).
+LOBOS = ["wolf", "wolf_ashen", "wolf_black", "wolf_chestnut", "wolf_rusty", "wolf_snowy",
+         "wolf_spotted", "wolf_striped", "wolf_woods"]
+
+
+def secretos_por_nombre(pack):
+    carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", "wolf")
+    os.makedirs(carpeta, exist_ok=True)
+    textura = skylar()
+    for raza in LOBOS:
+        for estado in ("", "_tame", "_angry"):
+            nombre = raza + estado
+            open(os.path.join(carpeta, nombre + "2.png"), "wb").write(textura)
+            with open(os.path.join(carpeta, nombre + ".properties"), "w", encoding="utf-8") as f:
+                f.write("# Secreto: un lobo con la etiqueta Skylar se ve como la perrita de Fran.\n"
+                        "textures.2=2\nname.2=ipattern:Skylar\n")
+
+
 def armar(version):
     base = os.path.dirname(os.path.abspath(__file__))
     pack = os.path.join(base, "pack")
+    secretos_por_nombre(pack)
     proveedores = [{"type": "space", "advances": {"": -1, "": -8, "": -32, "": -128}}]
     for tema, inicio in (("viajes", 0xE100), ("permisos", 0xE200)):
         for filas in FILAS:
