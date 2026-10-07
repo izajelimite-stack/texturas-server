@@ -105,13 +105,12 @@ RUBIO = [(226, 188, 132), (212, 170, 112), (232, 198, 146)]
 GRIS = [(150, 146, 140), (120, 116, 112)]
 OJO = (92, 60, 40)
 PUPILA = (10, 9, 10)
-BRILLO = (236, 236, 236)
+OREJA = [(36, 31, 30), (48, 41, 38), (28, 25, 26), (60, 50, 44)]
 NARIZ = (14, 13, 15)
 
 # Partes nuevas del modelo de Skylar y donde va su textura (en lugares libres de la imagen).
 OREJA_UV = (44, 14)    # caja 1x5x3
 COPETE_UV = (44, 23)   # caja 4x1x3
-BARBA_UV = (52, 0)     # caja 3x1x2
 
 
 def skylar():
@@ -143,41 +142,40 @@ def skylar():
     caja(x0, y0, x0 + 6, y0 + 6, NEGRO)
     for x in (0, 1, 4, 5):
         pinta(x0 + x, y0, RUBIO)                   # cejas rubias, sobre cada ojo
-    # Bajo los ojos (filas 4 a 6, a los lados del hocico): barba blanca, con negro en la orilla.
-    for y in (3, 4, 5):
+    # Fila 4 (bajo los ojos): aqui empieza el blanco del hocico, con negro en las orillas.
+    for x in range(6):
+        pinta(x0 + x, y0 + 3, NEGRO if x in (0, 5) else BLANCO)
+    # Filas 5 y 6 a los lados del hocico: barba blanca, gris en la orilla.
+    for y in (4, 5):
         for x in (0, 1, 4, 5):
-            orilla = x in (0, 5)
-            pinta(x0 + x, y0 + y, NEGRO if (orilla and y == 3) else GRIS if orilla else BLANCO)
-    # Ojos de Fresh Animations: cafe oscuro con un brillo arriba, como en las fotos
+            pinta(x0 + x, y0 + y, GRIS if x in (0, 5) else BLANCO)
+    # Ojos de Fresh Animations: chicos y oscuros, como los de ella (sin brillo: un pixel entero
+    # de brillo los hacia ver grandes). El pixel de arriba del ojo queda del color del pelo.
     for (x, y) in ((11, 13), (12, 13), (15, 13), (16, 13)):
         fijo(x, y, OJO)
-    fijo(12, 12, BRILLO); fijo(15, 12, BRILLO)
+    fijo(12, 12, NEGRO[1]); fijo(15, 12, NEGRO[1])
     fijo(12, 11, PUPILA); fijo(15, 11, PUPILA)
 
-    # Hocico: u1 v11, 3x3x3. Blanco, con la nariz negra grande en la punta.
-    c = desplegar(1, 11, 3, 3, 3)
+    # Hocico corto (el de ella es chato): u1 v11, 3x2x2. Blanco, con la nariz negra ancha arriba
+    # (asi queda separada de la frente por la fila blanca de la cara).
+    c = desplegar(1, 11, 3, 2, 2)
     for k in ("arriba", "abajo", "lado1", "lado2", "atras", "frente"):
         caja(*c[k], BLANCO)
-    ax, ay = c["arriba"][:2]                       # arriba: la fila mas cercana a la nariz es la de abajo
-    pinta(ax, ay, CREMA); pinta(ax + 2, ay, CREMA)
-    fijo(ax + 1, ay + 2, NARIZ)                    # la nariz se ve tambien desde arriba
-    fx, fy = c["frente"][:2]                       # punta: nariz negra al medio del hocico blanco
-    fijo(fx + 1, fy, NARIZ); fijo(fx + 1, fy + 1, NARIZ)
-    pinta(fx, fy, CREMA); pinta(fx + 2, fy, CREMA)
-    fijo(fx + 1, fy + 2, (96, 88, 86))             # boca bajo la nariz
+    ax, ay = c["arriba"][:2]                       # arriba: la fila de abajo es la punta
+    fijo(ax + 1, ay + 1, NARIZ)
+    fx, fy = c["frente"][:2]
+    fijo(fx, fy, (64, 58, 60)); fijo(fx + 1, fy, NARIZ); fijo(fx + 2, fy, (64, 58, 60))  # nariz redonda
+    pinta(fx, fy + 1, BLANCO); fijo(fx + 1, fy + 1, (110, 102, 100)); pinta(fx + 2, fy + 1, BLANCO)  # boca
 
-    # Orejas largas que cuelgan (partes nuevas del modelo): 1x5x3, negras y rizadas
+    # Orejas largas que cuelgan (partes nuevas del modelo): 1x5x3, negras y rizadas, con el brillo
+    # tibio que tienen los rizos en las fotos (asi se distinguen de la cabeza).
     c = desplegar(*OREJA_UV, 1, 5, 3)
     for k in c:
-        caja(*c[k], NEGRO)
+        caja(*c[k], OREJA)
     # Copete rizado sobre la cabeza: 4x1x3
     c = desplegar(*COPETE_UV, 4, 1, 3)
     for k in c:
         caja(*c[k], NEGRO)
-    # Barba que cuelga bajo el hocico: 3x1x2, blanca
-    c = desplegar(*BARBA_UV, 3, 1, 2)
-    for k in c:
-        caja(*c[k], BLANCO)
 
     # Cuello (mane): u21 v0, 8x6x7
     c = desplegar(21, 0, 8, 6, 7)
@@ -229,7 +227,7 @@ def lobo_fresh_animations():
 
 
 def modelo_skylar():
-    """El lobo de Fresh Animations con orejas largas que cuelgan, copete y barba.
+    """El lobo de Fresh Animations con orejas largas que cuelgan, copete y hocico corto.
 
     Las orejas de Fresh Animations se dejan sin caja (sus animaciones siguen ahi y no fallan) y se
     agregan otras, quietas, a los lados de la cabeza. Coordenadas en el formato de OptiFine
@@ -260,8 +258,9 @@ def modelo_skylar():
     cabeza["submodels"].append(parte("oreja_skylar_d", [3.5, 2, -2], [-0.5, -5, -1.5, 1, 5, 3], OREJA_UV))
     # Copete rizado arriba de la cabeza, hacia adelante.
     cabeza["submodels"].append(parte("copete_skylar", [0, 2.5, -3], [-2, 0, -1.5, 4, 1, 3], COPETE_UV))
-    # Barba bajo la punta del hocico (se mueve con el hocico).
-    hocico.setdefault("submodels", []).append(parte("barba_skylar", [0, 0, 0], [-1.5, -1, -3, 3, 1, 2], BARBA_UV))
+    # Hocico corto y chato (el de Fresh Animations es 3x3x3 y en ella se veia como un bloque grande):
+    # 3 de ancho, 2 de alto y 2 de largo, abajo en la cara. Mismo nombre, asi lo siguen animando.
+    hocico["boxes"] = [{"coordinates": [-1.5, 0, -2, 3, 2, 2], "textureOffset": [1, 11]}]
     jem["credit"] = "Lobo de Fresh Animations por FreshLX (modrinth.com/resourcepack/fresh-animations), modificado para Skylar"
     return jem
 
