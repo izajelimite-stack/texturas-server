@@ -1,0 +1,103 @@
+{
+  "providers": [
+    {
+      "type": "space",
+      "advances": {
+        "\uf801": -1,
+        "\uf808": -8,
+        "\uf820": -32,
+        "\uf880": -128
+      }
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/viajes_2.png",
+      "ascent": 13,
+      "height": 150,
+      "chars": [
+        "\ue102"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/viajes_3.png",
+      "ascent": 13,
+      "height": 168,
+      "chars": [
+        "\ue103"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/viajes_4.png",
+      "ascent": 13,
+      "height": 186,
+      "chars": [
+        "\ue104"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/viajes_5.png",
+      "ascent": 13,
+      "height": 204,
+      "chars": [
+        "\ue105"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/viajes_6.png",
+      "ascent": 13,
+      "height": 222,
+      "chars": [
+        "\ue106"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/permisos_2.png",
+      "ascent": 13,
+      "height": 150,
+      "chars": [
+        "\ue202"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/permisos_3.png",
+      "ascent": 13,
+      "height": 168,
+      "chars": [
+        "\ue203"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/permisos_4.png",
+      "ascent": 13,
+      "height": 186,
+      "chars": [
+        "\ue204"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/permisos_5.png",
+      "ascent": 13,
+      "height": 204,
+      "chars": [
+        "\ue205"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "amigos:font/menus/permisos_6.png",
+      "ascent": 13,
+      "height": 222,
+      "chars": [
+        "\ue206"
+      ]
+    }
+  ]
+}

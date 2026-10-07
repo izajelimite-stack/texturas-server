@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Server de los amigos: menus y detalles",
+    "min_format": 84,
+    "max_format": 999
+  }
+}
