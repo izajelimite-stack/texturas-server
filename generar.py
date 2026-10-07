@@ -1,14 +1,30 @@
-"""Arma el paquete de texturas del server desde cero (sin librerias: PNG a mano).
+"""Arma el paquete de texturas del server desde cero (PNG a mano, sin librerias).
 
-Por ahora trae los fondos de los menus propios (plugin Viajes): se dibujan como una "letra"
-gigante en el titulo del menu (fuente amigos:menus), con hoyos transparentes donde van las
-casillas para que los objetos se vean. Funciona en Minecraft normal, sin mods.
+Trae:
+ - los fondos de los menus propios (plugin Viajes): se dibujan como una "letra" gigante en el
+   titulo del menu (fuente amigos:menus), con hoyos donde van las casillas. Sin mods.
+ - Skylar, la perrita de Fran: un lobo con la etiqueta "Skylar" se ve como ella, con su propio
+   modelo (orejas largas colgando, copete, barba). Usa Entity Texture Features y Entity Model
+   Features, que vienen en Fabulously Optimized. El modelo parte del lobo de Fresh Animations
+   (de FreshLX, https://modrinth.com/resourcepack/fresh-animations), modificado, con credito.
 
 Uso: python3 generar.py <version>   ->  dist/texturas-v<version>.zip
 """
-import json, os, struct, sys, zlib, zipfile, hashlib
+import json, os, struct, sys, zlib, zipfile, hashlib, random, urllib.request, io, copy
 
 ANCHO = 176
+BASE = os.path.dirname(os.path.abspath(__file__))
+
+
+def png(ancho, alto, pix):
+    crudo = b"".join(b"\x00" + bytes(c for p in pix[y] for c in p) for y in range(alto))
+    def trozo(t, d):
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + trozo(b"IHDR", struct.pack(">IIBBBBB", ancho, alto, 8, 6, 0, 0, 0))
+            + trozo(b"IDAT", zlib.compress(crudo, 9)) + trozo(b"IEND", b""))
+
+
+# ---------------- menus ----------------
 
 TEMAS = {
     # Teletransporte: turquesa suave, como una perla de ender, con detalles dorados.
@@ -19,14 +35,6 @@ TEMAS = {
                      sombra=(138, 110, 72), casilla_osc=(88, 68, 44), casilla_clara=(255, 251, 238), oro=(176, 126, 36)),
 }
 FILAS = range(2, 7)  # los menus usan de 2 a 6 filas
-
-
-def png(ancho, alto, pix):
-    crudo = b"".join(b"\x00" + bytes(c for p in pix[y] for c in p) for y in range(alto))
-    def trozo(t, d):
-        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
-    return (b"\x89PNG\r\n\x1a\n" + trozo(b"IHDR", struct.pack(">IIBBBBB", ancho, alto, 8, 6, 0, 0, 0))
-            + trozo(b"IDAT", zlib.compress(crudo, 9)) + trozo(b"IEND", b""))
 
 
 def fondo(tema, filas):
@@ -78,98 +86,191 @@ def fondo(tema, filas):
 
 
 # ---------------- Skylar ----------------
-# La perrita de Fran (oct-2026), sacada de sus fotos: cuerpo negro rizado, pecho y guata blancos,
-# patas blancas con pintas negras, barba blanca con nariz negra grande, cejas y mejillas color
-# canela, orejas negras y cola negra con la punta blanca.
-# Va encima del lobo de Fresh Animations (64x32, mismo lugar de cada parte que el lobo normal,
-# mas sus ojos propios). Cada caja de Minecraft se despliega asi, con (u, v) la esquina y w, h, d
-# el ancho, alto y fondo: arriba (u+d, v), abajo (u+d+w, v), lado (u, v+d), frente (u+d, v+d),
-# otro lado (u+d+w, v+d), atras (u+2d+w, v+d). El cuerpo y el cuello van girados 90 grados: su
-# "frente" es la guata y su "atras" el lomo.
-NEGRO = [(26, 24, 28), (38, 35, 40), (18, 17, 20), (48, 44, 50)]
-BLANCO = [(238, 236, 231), (224, 222, 216), (246, 245, 241), (210, 208, 203)]
-CANELA = [(196, 150, 98), (178, 130, 80), (210, 168, 116)]
-GRIS = [(196, 194, 190), (176, 174, 170)]
+# Sacada de 16 fotos (oct-2026): cockapoo negra de pelo rizado. Cabeza negra con cejas rubias
+# (solo las cejas), ojos cafe oscuro, barba y hocico blancos, nariz negra grande, orejas largas
+# negras y rizadas que cuelgan. Pecho y guata blancos; una mancha blanca con pintas negras detras
+# del cuello, en el lomo y los costados. Patas blancas con pintas, muslos negros. Cola negra con
+# la punta blanca.
+#
+# Va sobre la distribucion del lobo de Fresh Animations (64x32). Cada caja se despliega asi, con
+# (u, v) la esquina y w, h, d ancho, alto y fondo: arriba (u+d, v), abajo (u+d+w, v), lado
+# (u, v+d), frente (u+d, v+d), otro lado (u+d+w, v+d), atras (u+2d+w, v+d). En el cuerpo y el
+# cuello (girados 90 grados) el "frente" es la guata y el "atras" el lomo.
+# La cara (6x6): fila 1 = cejas, filas 2 y 3 = ojos (en las 2 columnas de cada orilla), filas 4 a 6
+# = hocico al medio y mejillas a los lados.
+NEGRO = [(22, 21, 24), (30, 28, 32), (38, 36, 41), (46, 43, 48), (58, 52, 54)]
+BLANCO = [(242, 239, 231), (233, 229, 219), (248, 246, 240), (224, 219, 207)]
+CREMA = [(232, 224, 205), (222, 212, 190)]
+RUBIO = [(226, 188, 132), (212, 170, 112), (232, 198, 146)]
+GRIS = [(150, 146, 140), (120, 116, 112)]
+OJO = (92, 60, 40)
+PUPILA = (10, 9, 10)
+BRILLO = (236, 236, 236)
+NARIZ = (14, 13, 15)
+
+# Partes nuevas del modelo de Skylar y donde va su textura (en lugares libres de la imagen).
+OREJA_UV = (44, 14)    # caja 1x5x3
+COPETE_UV = (44, 23)   # caja 4x1x3
+BARBA_UV = (52, 0)     # caja 3x1x2
 
 
 def skylar():
-    import random
     azar = random.Random(7)  # siempre la misma textura
     pix = [[(0, 0, 0, 0)] * 64 for _ in range(32)]
     def pinta(x, y, paleta):
         pix[y][x] = azar.choice(paleta) + (255,)
+    def fijo(x, y, c):
+        pix[y][x] = c + (255,)
     def caja(x0, y0, x1, y1, paleta):  # x1, y1 sin incluir
         for y in range(y0, y1):
             for x in range(x0, x1):
                 pinta(x, y, paleta)
     def pintas(x0, y0, x1, y1, cuantas):  # puntitos negros sobre lo blanco
         for _ in range(cuantas):
-            pinta(azar.randrange(x0, x1), azar.randrange(y0, y1), NEGRO[:3])
+            pinta(azar.randrange(x0, x1), azar.randrange(y0, y1), NEGRO[:2])
+    def desplegar(u, v, w, h, d):
+        """Las 6 caras de una caja: arriba, abajo, lado1, frente, lado2, atras (x0, y0, x1, y1)."""
+        return dict(arriba=(u + d, v, u + d + w, v + d), abajo=(u + d + w, v, u + d + 2 * w, v + d),
+                    lado1=(u, v + d, u + d, v + d + h), frente=(u + d, v + d, u + d + w, v + d + h),
+                    lado2=(u + d + w, v + d, u + 2 * d + w, v + d + h), atras=(u + 2 * d + w, v + d, u + 2 * d + 2 * w, v + d + h))
 
     # Cabeza: u0 v0, 6x6x4
-    caja(4, 0, 10, 4, NEGRO)                       # arriba, rizos negros
-    caja(10, 0, 16, 4, BLANCO)                     # abajo (debajo de la mandibula)
-    caja(0, 4, 4, 10, NEGRO); caja(10, 4, 14, 10, NEGRO)   # lados
-    caja(2, 7, 4, 10, BLANCO); caja(10, 7, 12, 10, BLANCO)  # barba que se ve de lado
-    pinta(3, 7, CANELA); pinta(10, 7, CANELA)      # mejillas canela
-    caja(4, 4, 10, 10, NEGRO)                      # cara
-    for x in (5, 8):
-        pinta(x, 5, CANELA)                        # cejas canela, sobre los ojos
-    pinta(4, 5, CANELA); pinta(9, 5, CANELA)
-    caja(4, 8, 10, 10, BLANCO)                     # barba bajo el hocico
-    pinta(4, 7, CANELA); pinta(9, 7, CANELA)       # mejillas
-    caja(14, 4, 20, 10, NEGRO)                     # nuca
+    c = desplegar(0, 0, 6, 6, 4)
+    caja(*c["arriba"], NEGRO); caja(*c["atras"], NEGRO)
+    caja(*c["lado1"], NEGRO); caja(*c["lado2"], NEGRO)
+    caja(*c["abajo"], BLANCO)                      # bajo la mandibula
+    x0, y0 = c["frente"][:2]                       # cara, 6x6 desde (4, 4)
+    caja(x0, y0, x0 + 6, y0 + 6, NEGRO)
+    for x in (0, 1, 4, 5):
+        pinta(x0 + x, y0, RUBIO)                   # cejas rubias, sobre cada ojo
+    # Bajo los ojos (filas 4 a 6, a los lados del hocico): barba blanca, con negro en la orilla.
+    for y in (3, 4, 5):
+        for x in (0, 1, 4, 5):
+            orilla = x in (0, 5)
+            pinta(x0 + x, y0 + y, NEGRO if (orilla and y == 3) else GRIS if orilla else BLANCO)
+    # Ojos de Fresh Animations: cafe oscuro con un brillo arriba, como en las fotos
+    for (x, y) in ((11, 13), (12, 13), (15, 13), (16, 13)):
+        fijo(x, y, OJO)
+    fijo(12, 12, BRILLO); fijo(15, 12, BRILLO)
+    fijo(12, 11, PUPILA); fijo(15, 11, PUPILA)
 
-    # Hocico: u1 v11, 3x3x3
-    caja(4, 11, 7, 14, BLANCO)                     # arriba, blanco
-    pinta(4, 11, GRIS); pinta(6, 11, GRIS)
-    caja(7, 11, 10, 14, BLANCO)                    # abajo
-    caja(1, 14, 13, 17, BLANCO)                    # lados, frente y atras
-    pinta(3, 14, CANELA); pinta(7, 14, CANELA)     # canela atras de las mejillas
-    pix[14][5] = (14, 13, 15, 255); pix[15][5] = (14, 13, 15, 255)  # nariz negra grande
-    pix[14][4] = (40, 38, 42, 255); pix[14][6] = (40, 38, 42, 255)
+    # Hocico: u1 v11, 3x3x3. Blanco, con la nariz negra grande en la punta.
+    c = desplegar(1, 11, 3, 3, 3)
+    for k in ("arriba", "abajo", "lado1", "lado2", "atras", "frente"):
+        caja(*c[k], BLANCO)
+    ax, ay = c["arriba"][:2]                       # arriba: la fila mas cercana a la nariz es la de abajo
+    pinta(ax, ay, CREMA); pinta(ax + 2, ay, CREMA)
+    fijo(ax + 1, ay + 2, NARIZ)                    # la nariz se ve tambien desde arriba
+    fx, fy = c["frente"][:2]                       # punta: nariz negra al medio del hocico blanco
+    fijo(fx + 1, fy, NARIZ); fijo(fx + 1, fy + 1, NARIZ)
+    pinta(fx, fy, CREMA); pinta(fx + 2, fy, CREMA)
+    fijo(fx + 1, fy + 2, (96, 88, 86))             # boca bajo la nariz
 
-    # Ojos de Fresh Animations: oscuros, como los de ella
-    for (x, y) in ((11, 13), (12, 13), (15, 13), (16, 13), (12, 12), (15, 12)):
-        pix[y][x] = (82, 54, 36, 255)
-    pix[11][12] = (12, 10, 10, 255); pix[11][15] = (12, 10, 10, 255)
-
-    # Orejas: u16 v14, 2x2x1, negras
-    caja(16, 14, 22, 17, NEGRO)
+    # Orejas largas que cuelgan (partes nuevas del modelo): 1x5x3, negras y rizadas
+    c = desplegar(*OREJA_UV, 1, 5, 3)
+    for k in c:
+        caja(*c[k], NEGRO)
+    # Copete rizado sobre la cabeza: 4x1x3
+    c = desplegar(*COPETE_UV, 4, 1, 3)
+    for k in c:
+        caja(*c[k], NEGRO)
+    # Barba que cuelga bajo el hocico: 3x1x2, blanca
+    c = desplegar(*BARBA_UV, 3, 1, 2)
+    for k in c:
+        caja(*c[k], BLANCO)
 
     # Cuello (mane): u21 v0, 8x6x7
-    caja(28, 0, 36, 7, NEGRO); caja(28, 3, 36, 7, BLANCO)  # frente: arriba negro, pecho blanco
-    caja(36, 0, 44, 7, NEGRO)                      # hacia el cuerpo
-    caja(21, 7, 28, 13, NEGRO); caja(25, 7, 28, 13, BLANCO)  # lado: abajo blanco
-    caja(36, 7, 43, 13, NEGRO); caja(36, 7, 39, 13, BLANCO)  # otro lado
-    caja(28, 7, 36, 13, BLANCO)                    # bajo el cuello: pecho blanco
-    caja(43, 7, 51, 13, NEGRO)                     # lomo del cuello
+    c = desplegar(21, 0, 8, 6, 7)
+    caja(*c["arriba"], NEGRO); caja(28, 3, 36, 7, BLANCO)   # frente del pecho: blanco abajo
+    caja(*c["abajo"], NEGRO)
+    caja(*c["lado1"], NEGRO); caja(25, 7, 28, 13, BLANCO)   # costados: abajo blanco
+    caja(*c["lado2"], NEGRO); caja(36, 7, 39, 13, BLANCO)
+    caja(*c["frente"], BLANCO)                     # bajo el cuello
+    caja(*c["atras"], NEGRO)                       # nuca y cruz
+    caja(43, 11, 51, 13, BLANCO); pintas(43, 11, 51, 13, 4)  # empieza la mancha detras del cuello
 
-    # Cuerpo: u18 v14, 6x9x6
-    caja(24, 14, 30, 20, NEGRO); caja(24, 17, 30, 20, BLANCO)  # parte de adelante: pecho blanco abajo
-    caja(30, 14, 36, 20, NEGRO)                    # parte de atras (anca)
-    caja(18, 20, 24, 29, NEGRO); caja(36, 20, 42, 29, NEGRO)   # un lado y el lomo
-    caja(30, 20, 36, 29, NEGRO)                    # otro lado
-    caja(21, 20, 24, 24, BLANCO); pintas(21, 20, 24, 24, 3)    # mancha blanca con pintas, adelante
-    caja(30, 20, 33, 24, BLANCO); pintas(30, 20, 33, 24, 3)
-    caja(24, 20, 30, 29, BLANCO); pintas(24, 25, 30, 29, 4)    # guata blanca
+    # Cuerpo: u18 v14, 6x9x6 (v20 = adelante, v28 = atras)
+    c = desplegar(18, 14, 6, 9, 6)
+    caja(*c["arriba"], BLANCO); caja(24, 14, 30, 16, NEGRO)  # pecho blanco, arriba negro
+    caja(*c["abajo"], NEGRO)                       # anca
+    caja(*c["lado1"], NEGRO); caja(*c["lado2"], NEGRO)
+    caja(*c["frente"], BLANCO); pintas(24, 25, 30, 29, 3)    # guata blanca
+    caja(*c["atras"], NEGRO)                       # lomo
+    caja(36, 20, 42, 23, BLANCO); pintas(36, 20, 42, 23, 6)  # mancha blanca con pintas en el lomo
+    caja(18, 20, 21, 23, BLANCO); pintas(18, 20, 21, 23, 3)  # y en los costados, junto al lomo
+    caja(33, 20, 36, 23, BLANCO); pintas(33, 20, 36, 23, 3)
+    caja(22, 20, 24, 24, BLANCO); caja(30, 20, 32, 24, BLANCO)  # pecho que se ve de lado
 
-    # Patas: u0 v18, 2x8x2, blancas con pintas, arriba negras
-    caja(2, 18, 4, 20, NEGRO); caja(4, 18, 6, 20, BLANCO)
+    # Patas: u0 v18, 2x8x2. Arriba negras (muslos), abajo blancas con pintas.
+    c = desplegar(0, 18, 2, 8, 2)
+    caja(*c["arriba"], NEGRO); caja(*c["abajo"], CREMA)
     caja(0, 20, 8, 28, BLANCO)
-    caja(0, 20, 8, 21, NEGRO)
-    pintas(0, 21, 8, 26, 6)
+    caja(0, 20, 8, 22, NEGRO)
+    pintas(0, 22, 8, 26, 7)
 
-    # Cola: u9 v18, 2x8x2, negra con la punta blanca
-    caja(11, 18, 13, 20, NEGRO); caja(13, 18, 15, 20, BLANCO)
+    # Cola: u9 v18, 2x8x2 (v20 = base, v27 = punta). Negra con la punta blanca.
+    c = desplegar(9, 18, 2, 8, 2)
+    caja(*c["arriba"], NEGRO); caja(*c["abajo"], BLANCO)
     caja(9, 20, 17, 28, NEGRO); caja(9, 25, 17, 28, BLANCO)
     return png(64, 32, pix)
+
+
+# El lobo de Fresh Animations, para hacer la version de Skylar.
+FA_URL = "https://cdn.modrinth.com/data/50dA9Sha/versions/RGIzA5em/FreshAnimations_v1.10.5.zip"
+
+
+def lobo_fresh_animations():
+    cache = os.path.join(BASE, ".cache", "FreshAnimations_v1.10.5.zip")
+    if not os.path.exists(cache):
+        os.makedirs(os.path.dirname(cache), exist_ok=True)
+        datos = urllib.request.urlopen(urllib.request.Request(FA_URL, headers={"User-Agent": "texturas-server"}), timeout=60).read()
+        open(cache, "wb").write(datos)
+    return json.loads(zipfile.ZipFile(cache).read("assets/minecraft/optifine/cem/wolf.jem"))
+
+
+def modelo_skylar():
+    """El lobo de Fresh Animations con orejas largas que cuelgan, copete y barba.
+
+    Las orejas de Fresh Animations se dejan sin caja (sus animaciones siguen ahi y no fallan) y se
+    agregan otras, quietas, a los lados de la cabeza. Coordenadas en el formato de OptiFine
+    (invertAxis xy): la cabeza va de x -3 a 3, de y -3.5 a 2.5 y de z -4.5 a -0.5.
+    """
+    jem = copy.deepcopy(lobo_fresh_animations())
+    def buscar(p, nombre):
+        for s in p.get("submodels", []):
+            if s.get("id") == nombre:
+                return s
+            r = buscar(s, nombre)
+            if r:
+                return r
+        return None
+    cuerpo = next(m for m in jem["models"] if m.get("part") == "body")
+    cabeza = buscar(cuerpo, "head2")
+    hocico = buscar(cabeza, "snout")
+    for oreja in ("left_ear", "right_ear"):
+        buscar(cabeza, oreja)["boxes"] = []
+    def parte(nombre, tr, coords, uv, espejo=False):
+        p = {"id": nombre, "invertAxis": "xy", "translate": tr,
+             "boxes": [{"coordinates": coords, "textureOffset": list(uv)}]}
+        if espejo:
+            p["mirrorTexture"] = "u"
+        return p
+    # Orejas: desde arriba de la cabeza, por fuera de los costados, 5 de largo.
+    cabeza["submodels"].append(parte("oreja_skylar_i", [-3.5, 2, -2], [-0.5, -5, -1.5, 1, 5, 3], OREJA_UV, True))
+    cabeza["submodels"].append(parte("oreja_skylar_d", [3.5, 2, -2], [-0.5, -5, -1.5, 1, 5, 3], OREJA_UV))
+    # Copete rizado arriba de la cabeza, hacia adelante.
+    cabeza["submodels"].append(parte("copete_skylar", [0, 2.5, -3], [-2, 0, -1.5, 4, 1, 3], COPETE_UV))
+    # Barba bajo la punta del hocico (se mueve con el hocico).
+    hocico.setdefault("submodels", []).append(parte("barba_skylar", [0, 0, 0], [-1.5, -1, -3, 3, 1, 2], BARBA_UV))
+    jem["credit"] = "Lobo de Fresh Animations por FreshLX (modrinth.com/resourcepack/fresh-animations), modificado para Skylar"
+    return jem
 
 
 # Las 9 razas de lobo de 26.x, cada una con su textura normal, mansa y enojada. Un lobo llamado
 # Skylar usa la de ella en cualquiera (Entity Texture Features, del modpack).
 LOBOS = ["wolf", "wolf_ashen", "wolf_black", "wolf_chestnut", "wolf_rusty", "wolf_snowy",
          "wolf_spotted", "wolf_striped", "wolf_woods"]
+REGLA = "# Secreto: un lobo con la etiqueta Skylar se ve como la perrita de Fran.\n"
 
 
 def secretos_por_nombre(pack):
@@ -181,13 +282,17 @@ def secretos_por_nombre(pack):
             nombre = raza + estado
             open(os.path.join(carpeta, nombre + "2.png"), "wb").write(textura)
             with open(os.path.join(carpeta, nombre + ".properties"), "w", encoding="utf-8") as f:
-                f.write("# Secreto: un lobo con la etiqueta Skylar se ve como la perrita de Fran.\n"
-                        "textures.2=2\nname.2=ipattern:Skylar\n")
+                f.write(REGLA + "textures.2=2\nname.2=ipattern:Skylar\n")
+    cem = os.path.join(pack, "assets", "minecraft", "optifine", "cem")
+    os.makedirs(cem, exist_ok=True)
+    json.dump(modelo_skylar(), open(os.path.join(cem, "wolf2.jem"), "w", encoding="utf-8"), indent=1)
+    with open(os.path.join(cem, "wolf.properties"), "w", encoding="utf-8") as f:
+        f.write(REGLA + "models.2=2\nname.2=ipattern:Skylar\n")
+    return textura
 
 
 def armar(version):
-    base = os.path.dirname(os.path.abspath(__file__))
-    pack = os.path.join(base, "pack")
+    pack = os.path.join(BASE, "pack")
     secretos_por_nombre(pack)
     proveedores = [{"type": "space", "advances": {"": -1, "": -8, "": -32, "": -128}}]
     for tema, inicio in (("viajes", 0xE100), ("permisos", 0xE200)):
@@ -202,10 +307,11 @@ def armar(version):
     fuente = os.path.join(pack, "assets", "amigos", "font", "menus.json")
     os.makedirs(os.path.dirname(fuente), exist_ok=True)
     json.dump({"providers": proveedores}, open(fuente, "w", encoding="utf-8"), ensure_ascii=True, indent=2)
-    json.dump({"pack": {"description": "Server de los amigos: menus y detalles", "min_format": 84, "max_format": 999}},
+    json.dump({"pack": {"description": "Server de los amigos: menus y Skylar (lobo basado en Fresh Animations de FreshLX)",
+                        "min_format": 84, "max_format": 999}},
               open(os.path.join(pack, "pack.mcmeta"), "w", encoding="utf-8"), indent=2)
-    os.makedirs(os.path.join(base, "dist"), exist_ok=True)
-    salida = os.path.join(base, "dist", f"texturas-v{version}.zip")
+    os.makedirs(os.path.join(BASE, "dist"), exist_ok=True)
+    salida = os.path.join(BASE, "dist", f"texturas-v{version}.zip")
     with zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as z:
         for raiz, _, archivos in os.walk(pack):
             for a in sorted(archivos):
