@@ -1,0 +1,161 @@
+{
+ "textures": {
+  "r": "minecraft:block/red_terracotta",
+  "a": "minecraft:block/blue_terracotta",
+  "v": "minecraft:block/green_terracotta",
+  "hoja": "minecraft:block/white_concrete_powder",
+  "particle": "minecraft:block/red_terracotta"
+ },
+ "elements": [
+  {
+   "from": [
+    3,
+    0,
+    5
+   ],
+   "to": [
+    12,
+    2,
+    11
+   ],
+   "faces": {
+    "north": {
+     "texture": "#hoja"
+    },
+    "south": {
+     "texture": "#hoja"
+    },
+    "east": {
+     "texture": "#hoja"
+    },
+    "west": {
+     "texture": "#r"
+    },
+    "up": {
+     "texture": "#r"
+    },
+    "down": {
+     "texture": "#r"
+    }
+   }
+  },
+  {
+   "from": [
+    4,
+    2,
+    4.5
+   ],
+   "to": [
+    12.5,
+    3.6,
+    10.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#hoja"
+    },
+    "south": {
+     "texture": "#hoja"
+    },
+    "east": {
+     "texture": "#hoja"
+    },
+    "west": {
+     "texture": "#a"
+    },
+    "up": {
+     "texture": "#a"
+    },
+    "down": {
+     "texture": "#a"
+    }
+   },
+   "rotation": {
+    "origin": [
+     8,
+     2,
+     8
+    ],
+    "axis": "y",
+    "angle": 22.5
+   }
+  },
+  {
+   "from": [
+    3.5,
+    3.6,
+    5.5
+   ],
+   "to": [
+    11,
+    5,
+    11
+   ],
+   "faces": {
+    "north": {
+     "texture": "#hoja"
+    },
+    "south": {
+     "texture": "#hoja"
+    },
+    "east": {
+     "texture": "#hoja"
+    },
+    "west": {
+     "texture": "#v"
+    },
+    "up": {
+     "texture": "#v"
+    },
+    "down": {
+     "texture": "#v"
+    }
+   },
+   "rotation": {
+    "origin": [
+     8,
+     4,
+     8
+    ],
+    "axis": "y",
+    "angle": -22.5
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}

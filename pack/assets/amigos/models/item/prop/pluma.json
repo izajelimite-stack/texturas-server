@@ -1,0 +1,151 @@
+{
+ "textures": {
+  "tinta": "minecraft:block/black_concrete",
+  "pluma": "minecraft:block/white_wool",
+  "papel": "minecraft:block/white_concrete_powder",
+  "particle": "minecraft:block/black_concrete"
+ },
+ "elements": [
+  {
+   "from": [
+    3,
+    0,
+    4
+   ],
+   "to": [
+    11,
+    0.3,
+    12
+   ],
+   "faces": {
+    "north": {
+     "texture": "#papel"
+    },
+    "south": {
+     "texture": "#papel"
+    },
+    "east": {
+     "texture": "#papel"
+    },
+    "west": {
+     "texture": "#papel"
+    },
+    "up": {
+     "texture": "#papel"
+    },
+    "down": {
+     "texture": "#papel"
+    }
+   }
+  },
+  {
+   "from": [
+    10,
+    0,
+    9
+   ],
+   "to": [
+    13,
+    2.2,
+    12
+   ],
+   "faces": {
+    "north": {
+     "texture": "#tinta"
+    },
+    "south": {
+     "texture": "#tinta"
+    },
+    "east": {
+     "texture": "#tinta"
+    },
+    "west": {
+     "texture": "#tinta"
+    },
+    "up": {
+     "texture": "#tinta"
+    },
+    "down": {
+     "texture": "#tinta"
+    }
+   }
+  },
+  {
+   "from": [
+    11.2,
+    2.2,
+    10.2
+   ],
+   "to": [
+    11.8,
+    9,
+    10.8
+   ],
+   "faces": {
+    "north": {
+     "texture": "#pluma"
+    },
+    "south": {
+     "texture": "#pluma"
+    },
+    "east": {
+     "texture": "#pluma"
+    },
+    "west": {
+     "texture": "#pluma"
+    },
+    "up": {
+     "texture": "#pluma"
+    },
+    "down": {
+     "texture": "#pluma"
+    }
+   },
+   "rotation": {
+    "origin": [
+     11.5,
+     2.2,
+     10.5
+    ],
+    "axis": "x",
+    "angle": -22.5
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}

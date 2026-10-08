@@ -1,0 +1,142 @@
+{
+ "textures": {
+  "vinilo": "minecraft:block/black_concrete",
+  "etiqueta": "minecraft:block/red_concrete",
+  "base": "minecraft:block/oak_planks",
+  "particle": "minecraft:block/black_concrete"
+ },
+ "elements": [
+  {
+   "from": [
+    4.5,
+    0,
+    6.5
+   ],
+   "to": [
+    11.5,
+    1,
+    9.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#base"
+    },
+    "south": {
+     "texture": "#base"
+    },
+    "east": {
+     "texture": "#base"
+    },
+    "west": {
+     "texture": "#base"
+    },
+    "up": {
+     "texture": "#base"
+    },
+    "down": {
+     "texture": "#base"
+    }
+   }
+  },
+  {
+   "from": [
+    3,
+    1,
+    7.6
+   ],
+   "to": [
+    13,
+    11,
+    8.4
+   ],
+   "faces": {
+    "north": {
+     "texture": "#vinilo"
+    },
+    "south": {
+     "texture": "#vinilo"
+    },
+    "east": {
+     "texture": "#vinilo"
+    },
+    "west": {
+     "texture": "#vinilo"
+    },
+    "up": {
+     "texture": "#vinilo"
+    },
+    "down": {
+     "texture": "#vinilo"
+    }
+   }
+  },
+  {
+   "from": [
+    6.5,
+    4.5,
+    7.5
+   ],
+   "to": [
+    9.5,
+    7.5,
+    8.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#etiqueta"
+    },
+    "south": {
+     "texture": "#etiqueta"
+    },
+    "east": {
+     "texture": "#etiqueta"
+    },
+    "west": {
+     "texture": "#etiqueta"
+    },
+    "up": {
+     "texture": "#etiqueta"
+    },
+    "down": {
+     "texture": "#etiqueta"
+    }
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}

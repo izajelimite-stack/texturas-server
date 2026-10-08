@@ -1,0 +1,151 @@
+{
+ "textures": {
+  "base": "minecraft:block/dark_oak_planks",
+  "tubo": "minecraft:block/copper_block",
+  "lente": "minecraft:block/black_concrete",
+  "particle": "minecraft:block/dark_oak_planks"
+ },
+ "elements": [
+  {
+   "from": [
+    6,
+    0,
+    6
+   ],
+   "to": [
+    10,
+    1,
+    10
+   ],
+   "faces": {
+    "north": {
+     "texture": "#base"
+    },
+    "south": {
+     "texture": "#base"
+    },
+    "east": {
+     "texture": "#base"
+    },
+    "west": {
+     "texture": "#base"
+    },
+    "up": {
+     "texture": "#base"
+    },
+    "down": {
+     "texture": "#base"
+    }
+   }
+  },
+  {
+   "from": [
+    7.5,
+    1,
+    7.5
+   ],
+   "to": [
+    8.5,
+    7,
+    8.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#base"
+    },
+    "south": {
+     "texture": "#base"
+    },
+    "east": {
+     "texture": "#base"
+    },
+    "west": {
+     "texture": "#base"
+    },
+    "up": {
+     "texture": "#base"
+    },
+    "down": {
+     "texture": "#base"
+    }
+   }
+  },
+  {
+   "from": [
+    2.5,
+    7,
+    7
+   ],
+   "to": [
+    13.5,
+    9,
+    9
+   ],
+   "faces": {
+    "north": {
+     "texture": "#tubo"
+    },
+    "south": {
+     "texture": "#tubo"
+    },
+    "east": {
+     "texture": "#lente"
+    },
+    "west": {
+     "texture": "#lente"
+    },
+    "up": {
+     "texture": "#tubo"
+    },
+    "down": {
+     "texture": "#tubo"
+    }
+   },
+   "rotation": {
+    "origin": [
+     8,
+     8,
+     8
+    ],
+    "axis": "z",
+    "angle": 22.5
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}

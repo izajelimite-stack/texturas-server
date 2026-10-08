@@ -529,10 +529,110 @@ def secretos_por_nombre(pack):
     return textura
 
 
+# ---------------- props 3D ----------------
+# Adornos para los soportes "prop" (plugin Detalles): el objeto se muestra con uno de estos modelos,
+# apoyado en la base del soporte. Hechos con texturas del propio Minecraft (nada copiado de otro
+# paquete). Medidas en pixeles de bloque (0 a 16); el modelo se apoya en y=0.
+def _cubo(desde, hasta, tex, rot=None, caras_tex=None):
+    caras = {}
+    for d in ("north", "south", "east", "west", "up", "down"):
+        caras[d] = {"texture": "#" + ((caras_tex or {}).get(d, tex))}
+    e = {"from": list(desde), "to": list(hasta), "faces": caras}
+    if rot:
+        e["rotation"] = rot
+    return e
+
+
+PROPS = {
+    # id: (texturas, elementos)
+    "libro": ({"tapa": "block/red_terracotta", "hoja": "block/white_concrete_powder", "lomo": "block/brown_terracotta"}, [
+        _cubo((2.5, 0, 4), (13.5, 0.6, 12), "tapa"),
+        _cubo((3, 0.6, 4.4), (7.9, 1.4, 11.6), "hoja"),
+        _cubo((8.1, 0.6, 4.4), (13, 1.4, 11.6), "hoja"),
+        _cubo((7.8, 0.6, 4.2), (8.2, 1.2, 11.8), "lomo"),
+    ]),
+    "libros": ({"r": "block/red_terracotta", "a": "block/blue_terracotta", "v": "block/green_terracotta",
+                "hoja": "block/white_concrete_powder"}, [
+        _cubo((3, 0, 5), (12, 2, 11), "r", caras_tex={"north": "hoja", "south": "hoja", "east": "hoja"}),
+        _cubo((4, 2, 4.5), (12.5, 3.6, 10.5), "a", {"origin": [8, 2, 8], "axis": "y", "angle": 22.5},
+              caras_tex={"north": "hoja", "south": "hoja", "east": "hoja"}),
+        _cubo((3.5, 3.6, 5.5), (11, 5, 11), "v", {"origin": [8, 4, 8], "axis": "y", "angle": -22.5},
+              caras_tex={"north": "hoja", "south": "hoja", "east": "hoja"}),
+    ]),
+    "taza": ({"loza": "block/white_terracotta", "cafe": "block/brown_concrete"}, [
+        _cubo((6, 0, 6), (10, 4, 10), "loza"),
+        _cubo((6.5, 3.6, 6.5), (9.5, 3.9, 9.5), "cafe"),
+        _cubo((10, 0.8, 7.5), (11.2, 1.4, 8.5), "loza"),
+        _cubo((10.6, 1.4, 7.5), (11.2, 2.8, 8.5), "loza"),
+        _cubo((10, 2.8, 7.5), (11.2, 3.4, 8.5), "loza"),
+    ]),
+    "sopa": ({"plato": "block/white_concrete", "pocillo": "block/stripped_oak_log", "sopa": "block/orange_terracotta"}, [
+        _cubo((3.5, 0, 3.5), (12.5, 0.5, 12.5), "plato"),
+        _cubo((5.5, 0.5, 5.5), (10.5, 2.6, 10.5), "pocillo"),
+        _cubo((6, 2.2, 6), (10, 2.5, 10), "sopa"),
+    ]),
+    "galletas": ({"plato": "block/white_concrete", "galleta": "item/cookie", "masa": "block/brown_terracotta"}, [
+        _cubo((3.5, 0, 3.5), (12.5, 0.5, 12.5), "plato"),
+        _cubo((4.5, 0.5, 4.5), (8, 1.1, 8), "masa", caras_tex={"up": "galleta"}),
+        _cubo((8, 0.5, 5), (11.5, 1.1, 8.5), "masa", caras_tex={"up": "galleta"}),
+        _cubo((6, 1.1, 6.5), (9.5, 1.7, 10), "masa", caras_tex={"up": "galleta"}),
+    ]),
+    "frasco": ({"vidrio": "block/glass", "tapa": "block/spruce_planks", "miel": "block/honey_block_side"}, [
+        _cubo((6, 0, 6), (10, 5, 10), "vidrio"),
+        _cubo((6.4, 0.1, 6.4), (9.6, 2.6, 9.6), "miel"),
+        _cubo((5.8, 5, 5.8), (10.2, 5.8, 10.2), "tapa"),
+    ]),
+    "jarra": ({"loza": "block/white_concrete", "leche": "block/white_wool", "asa": "block/light_gray_concrete"}, [
+        _cubo((5.5, 0, 5.5), (10.5, 6, 10.5), "loza"),
+        _cubo((6, 5.7, 6), (10, 5.9, 10), "leche"),
+        _cubo((4.8, 5, 7.3), (5.5, 6, 8.7), "loza"),
+        _cubo((10.5, 1.5, 7.4), (11.7, 2.1, 8.6), "asa"),
+        _cubo((11.1, 2.1, 7.4), (11.7, 4.4, 8.6), "asa"),
+        _cubo((10.5, 4.4, 7.4), (11.7, 5, 8.6), "asa"),
+    ]),
+    "pluma": ({"tinta": "block/black_concrete", "pluma": "block/white_wool", "papel": "block/white_concrete_powder"}, [
+        _cubo((3, 0, 4), (11, 0.3, 12), "papel"),
+        _cubo((10, 0, 9), (13, 2.2, 12), "tinta"),
+        _cubo((11.2, 2.2, 10.2), (11.8, 9, 10.8), "pluma", {"origin": [11.5, 2.2, 10.5], "axis": "x", "angle": -22.5}),
+    ]),
+    "telescopio": ({"base": "block/dark_oak_planks", "tubo": "block/copper_block", "lente": "block/black_concrete"}, [
+        _cubo((6, 0, 6), (10, 1, 10), "base"),
+        _cubo((7.5, 1, 7.5), (8.5, 7, 8.5), "base"),
+        _cubo((2.5, 7, 7), (13.5, 9, 9), "tubo", {"origin": [8, 8, 8], "axis": "z", "angle": 22.5},
+              caras_tex={"west": "lente", "east": "lente"}),
+    ]),
+    "disco": ({"vinilo": "block/black_concrete", "etiqueta": "block/red_concrete", "base": "block/oak_planks"}, [
+        _cubo((4.5, 0, 6.5), (11.5, 1, 9.5), "base"),
+        _cubo((3, 1, 7.6), (13, 11, 8.4), "vinilo"),
+        _cubo((6.5, 4.5, 7.5), (9.5, 7.5, 8.5), "etiqueta"),
+    ]),
+}
+
+
+def props(pack):
+    for pid, (texturas, elementos) in PROPS.items():
+        modelo = {
+            "textures": {**{k: "minecraft:" + v for k, v in texturas.items()},
+                         "particle": "minecraft:" + next(iter(texturas.values()))},
+            "elements": elementos,
+            # "fixed" es como lo muestra el adorno (tamano real, sin girar); "gui" por si alguien lo ve en un menu.
+            "display": {"fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+                        "gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0], "scale": [0.8, 0.8, 0.8]}},
+        }
+        ruta = os.path.join(pack, "assets", "amigos", "models", "item", "prop", pid + ".json")
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        json.dump(modelo, open(ruta, "w", encoding="utf-8"), indent=1)
+        item = os.path.join(pack, "assets", "amigos", "items", "prop_" + pid + ".json")
+        os.makedirs(os.path.dirname(item), exist_ok=True)
+        json.dump({"model": {"type": "minecraft:model", "model": "amigos:item/prop/" + pid}},
+                  open(item, "w", encoding="utf-8"), indent=1)
+
+
 def armar(version):
     pack = os.path.join(BASE, "pack")
     secretos_por_nombre(pack)
     variantes_raras(pack)
+    props(pack)
     proveedores = [{"type": "space", "advances": {"": -1, "": -8, "": -32, "": -128}}]
     for tema, inicio in (("viajes", 0xE100), ("permisos", 0xE200)):
         for filas in FILAS:

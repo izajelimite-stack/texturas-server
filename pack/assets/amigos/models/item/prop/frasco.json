@@ -1,0 +1,142 @@
+{
+ "textures": {
+  "vidrio": "minecraft:block/glass",
+  "tapa": "minecraft:block/spruce_planks",
+  "miel": "minecraft:block/honey_block_side",
+  "particle": "minecraft:block/glass"
+ },
+ "elements": [
+  {
+   "from": [
+    6,
+    0,
+    6
+   ],
+   "to": [
+    10,
+    5,
+    10
+   ],
+   "faces": {
+    "north": {
+     "texture": "#vidrio"
+    },
+    "south": {
+     "texture": "#vidrio"
+    },
+    "east": {
+     "texture": "#vidrio"
+    },
+    "west": {
+     "texture": "#vidrio"
+    },
+    "up": {
+     "texture": "#vidrio"
+    },
+    "down": {
+     "texture": "#vidrio"
+    }
+   }
+  },
+  {
+   "from": [
+    6.4,
+    0.1,
+    6.4
+   ],
+   "to": [
+    9.6,
+    2.6,
+    9.6
+   ],
+   "faces": {
+    "north": {
+     "texture": "#miel"
+    },
+    "south": {
+     "texture": "#miel"
+    },
+    "east": {
+     "texture": "#miel"
+    },
+    "west": {
+     "texture": "#miel"
+    },
+    "up": {
+     "texture": "#miel"
+    },
+    "down": {
+     "texture": "#miel"
+    }
+   }
+  },
+  {
+   "from": [
+    5.8,
+    5,
+    5.8
+   ],
+   "to": [
+    10.2,
+    5.8,
+    10.2
+   ],
+   "faces": {
+    "north": {
+     "texture": "#tapa"
+    },
+    "south": {
+     "texture": "#tapa"
+    },
+    "east": {
+     "texture": "#tapa"
+    },
+    "west": {
+     "texture": "#tapa"
+    },
+    "up": {
+     "texture": "#tapa"
+    },
+    "down": {
+     "texture": "#tapa"
+    }
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}

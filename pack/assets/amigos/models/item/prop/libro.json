@@ -1,0 +1,174 @@
+{
+ "textures": {
+  "tapa": "minecraft:block/red_terracotta",
+  "hoja": "minecraft:block/white_concrete_powder",
+  "lomo": "minecraft:block/brown_terracotta",
+  "particle": "minecraft:block/red_terracotta"
+ },
+ "elements": [
+  {
+   "from": [
+    2.5,
+    0,
+    4
+   ],
+   "to": [
+    13.5,
+    0.6,
+    12
+   ],
+   "faces": {
+    "north": {
+     "texture": "#tapa"
+    },
+    "south": {
+     "texture": "#tapa"
+    },
+    "east": {
+     "texture": "#tapa"
+    },
+    "west": {
+     "texture": "#tapa"
+    },
+    "up": {
+     "texture": "#tapa"
+    },
+    "down": {
+     "texture": "#tapa"
+    }
+   }
+  },
+  {
+   "from": [
+    3,
+    0.6,
+    4.4
+   ],
+   "to": [
+    7.9,
+    1.4,
+    11.6
+   ],
+   "faces": {
+    "north": {
+     "texture": "#hoja"
+    },
+    "south": {
+     "texture": "#hoja"
+    },
+    "east": {
+     "texture": "#hoja"
+    },
+    "west": {
+     "texture": "#hoja"
+    },
+    "up": {
+     "texture": "#hoja"
+    },
+    "down": {
+     "texture": "#hoja"
+    }
+   }
+  },
+  {
+   "from": [
+    8.1,
+    0.6,
+    4.4
+   ],
+   "to": [
+    13,
+    1.4,
+    11.6
+   ],
+   "faces": {
+    "north": {
+     "texture": "#hoja"
+    },
+    "south": {
+     "texture": "#hoja"
+    },
+    "east": {
+     "texture": "#hoja"
+    },
+    "west": {
+     "texture": "#hoja"
+    },
+    "up": {
+     "texture": "#hoja"
+    },
+    "down": {
+     "texture": "#hoja"
+    }
+   }
+  },
+  {
+   "from": [
+    7.8,
+    0.6,
+    4.2
+   ],
+   "to": [
+    8.2,
+    1.2,
+    11.8
+   ],
+   "faces": {
+    "north": {
+     "texture": "#lomo"
+    },
+    "south": {
+     "texture": "#lomo"
+    },
+    "east": {
+     "texture": "#lomo"
+    },
+    "west": {
+     "texture": "#lomo"
+    },
+    "up": {
+     "texture": "#lomo"
+    },
+    "down": {
+     "texture": "#lomo"
+    }
+   }
+  }
+ ],
+ "display": {
+  "fixed": {
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "translation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.8,
+    0.8,
+    0.8
+   ]
+  }
+ }
+}
