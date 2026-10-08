@@ -492,8 +492,107 @@ def golem_y_momia(pack):
                 "skins.1=2\nname.1=iregex:(momia|mummy|dusty)\nskins.2=1 2\nweights.2=97 3\n")
 
 
+def archivo_ext(ruta):
+    textura_ext("enderman/enderman.png")  # deja bajado el zip de las extensiones
+    z = zipfile.ZipFile(os.path.join(BASE, ".cache", "FA+All_Extensions-v1.9.2.zip"))
+    return z.read("assets/minecraft/" + ruta)
+
+
+# Mobs que las extensiones de FA ya tienen con reglas (Bart, Dave). Un archivo nuestro con el mismo
+# nombre reemplaza al de ellas, asi que se juntan: sus reglas siguen igual y se suma la nuestra.
+# Si las extensiones cambian sus reglas, esto avisa en vez de pisarlas sin darse cuenta.
+REGLAS_EXT = {
+    "optifine/random/entity/enderman/enderman.properties": "skins.1=2\nname.1=iregex:Bart\nskins.2=  1 2\nweights.2=50 1",
+    "optifine/random/entity/enderman/enderman_eyes.properties": "skins.1=2\nname.1=iregex:Bart\nskins.2=  1 2\nweights.2=50 1",
+    "optifine/random/entity/zombie/zombie.properties": "skins.1=2\nname.1=iregex:Dave\nskins.2=1 2\nweights.2=100 1",
+}
+
+
+def reglas_juntas(ruta, suyo, nuestro_nombre, nuestros, de_cada_mil_ellos, de_cada_mil_nuestro, nota):
+    actual = archivo_ext(ruta).decode("utf-8").strip().replace("\r", "")
+    assert actual == REGLAS_EXT[ruta], f"las extensiones cambiaron {ruta}: revisar antes de juntar"
+    normal = 1000 - de_cada_mil_ellos - de_cada_mil_nuestro
+    return (f"# {nota}\n# Juntado con las reglas de Fresh Animations Extensions ({suyo}), que siguen igual.\n"
+            f"skins.1=2\nname.1=iregex:{suyo}\n"
+            f"skins.2=3\nname.2=iregex:({nuestro_nombre})\n"
+            f"skins.3=1 2 3\nweights.3={normal} {de_cada_mil_ellos} {de_cada_mil_nuestro}\n")
+
+
+def ojos_verdes(ruta):
+    """El enderman de ojos verdes (Actions & Stuff, 0.3%): lo morado de los ojos pasa a verde."""
+    import colorsys
+    w, h, pix = leer_png(archivo_ext("textures/entity/" + ruta))
+    out = []
+    for fila in pix:
+        nueva = []
+        for (r, g, b, a) in fila:
+            hh, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if a and s > 0.25 and 0.7 < hh < 0.97:
+                rr, gg, bb = colorsys.hsv_to_rgb(0.36, s, v)
+                nueva.append((round(rr * 255), round(gg * 255), round(bb * 255), a))
+            else:
+                nueva.append((r, g, b, a))
+        out.append(nueva)
+    return png(w, h, out)
+
+
+def zombie_brian():
+    """Brian, el zombie rarisimo (Actions & Stuff solo dice "Brian" o "Glare"): version nuestra, con
+    lentes de sol oscuros sobre los ojos."""
+    try:
+        w, h, pix = leer_png(archivo_ext("textures/entity/zombie/zombie.png"))
+    except KeyError:
+        w, h, pix = textura_fa("zombie/zombie.png")
+    out = [list(f) for f in pix]
+    LENTE, MARCO = (16, 16, 22, 255), (40, 40, 48, 255)
+    # Cara de la cabeza (8x8 en 8,8). Lentes en la fila de los ojos, puente al medio, patillas a los lados.
+    for x in range(9, 15):
+        out[12][x] = LENTE
+    out[11][9] = MARCO; out[11][10] = MARCO; out[11][13] = MARCO; out[11][14] = MARCO
+    out[12][11] = MARCO; out[12][12] = MARCO
+    out[12][8] = MARCO; out[12][15] = MARCO
+    for x in (6, 7): out[12][x] = MARCO        # patilla en un costado (cara de lado 0..8)
+    for x in (16, 17): out[12][x] = MARCO      # y en el otro (16..24)
+    # Los ojos propios de Fresh Animations (partes aparte, si las tiene): negros, como el vidrio.
+    try:
+        jem = json.loads(zipfile.ZipFile(os.path.join(BASE, ".cache", "FreshAnimations_v1.10.5.zip"))
+                         .read("assets/minecraft/optifine/cem/zombie.jem"))
+        def recorrer(p):
+            for s in p.get("submodels", []):
+                if "eye" in s.get("id", "") or "pupil" in s.get("id", ""):
+                    for b in s.get("boxes", []):
+                        uv = b.get("uvNorth")
+                        if uv:
+                            for y in range(int(uv[1]), int(uv[3])):
+                                for x in range(int(uv[0]), int(uv[2])):
+                                    out[y][x] = LENTE
+                recorrer(s)
+        for m in jem["models"]:
+            recorrer(m)
+    except KeyError:
+        pass
+    return png(w, h, out)
+
+
+def variantes_que_se_juntan(pack):
+    base = os.path.join(pack, "assets", "minecraft")
+    def escribir(ruta, texto):
+        os.makedirs(os.path.dirname(os.path.join(base, ruta)), exist_ok=True)
+        open(os.path.join(base, ruta), "w", encoding="utf-8").write(texto)
+    nota = "Enderman de ojos verdes (Actions & Stuff): 3 de cada 1000, o con la etiqueta Verde/Beanie/Green."
+    for capa in ("enderman", "enderman_eyes"):
+        ruta = f"optifine/random/entity/enderman/{capa}.properties"
+        escribir(ruta, reglas_juntas(ruta, "Bart", "verde|beanie|green|ojos verdes", None, 20, 3, nota))
+        open(os.path.join(base, f"optifine/random/entity/enderman/{capa}3.png"), "wb").write(ojos_verdes(f"enderman/{capa}.png"))
+    ruta = "optifine/random/entity/zombie/zombie.properties"
+    escribir(ruta, reglas_juntas(ruta, "Dave", "brian|glare", None, 10, 1,
+                                 "Brian, zombie rarisimo con lentes de sol (version nuestra del de Actions & Stuff): 1 de cada 1000."))
+    open(os.path.join(base, "optifine/random/entity/zombie/zombie3.png"), "wb").write(zombie_brian())
+
+
 def variantes_raras(pack):
     golem_y_momia(pack)
+    variantes_que_se_juntan(pack)
     for mob, archivo, tono, smin, smult, luz, nombres, cada in RARAS:
         w, h, pix = textura_fa(archivo)
         carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", mob)
