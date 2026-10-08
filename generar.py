@@ -335,7 +335,165 @@ RARAS = [
 ]
 
 
+def textura_ext(ruta):
+    """Una textura de las extensiones de Fresh Animations (las que estan activas encima de FA)."""
+    cache = os.path.join(BASE, ".cache", "FA+All_Extensions-v1.9.2.zip")
+    if not os.path.exists(cache):
+        url = "https://cdn.modrinth.com/data/YAVTU8mK/versions/R5ZGSF8A/FA%2BAll_Extensions-v1.9.2.zip"
+        open(cache, "wb").write(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "texturas-server"}), timeout=60).read())
+    return leer_png(zipfile.ZipFile(cache).read("assets/minecraft/textures/entity/" + ruta))
+
+
+def es_enredadera(c):
+    """Pixeles verdes o amarillos de las enredaderas y flores del golem."""
+    import colorsys
+    h, s, v = colorsys.rgb_to_hsv(c[0] / 255, c[1] / 255, c[2] / 255)
+    return c[3] > 0 and s > 0.3 and 0.1 < h < 0.45
+
+
+# El golem de hierro (de las extensiones de FA, 128x128). Caras de cada caja: la caja (u, v, w, h, d).
+GOLEM_CUERPO = (0, 40, 18, 12, 11)
+GOLEM_CINTURA = (0, 68, 10, 6, 7)
+GOLEM_BRAZOS = ((60, 21, 4, 30, 6), (60, 58, 4, 30, 6))
+GOLEM_PIERNAS = ((60, 0, 6, 16, 5), (37, 0, 6, 16, 5))
+GOLEM_CABEZA = (0, 0, 8, 10, 8)
+
+
+def caras(u, v, w, h, d):
+    return dict(arriba=(u + d, v, u + d + w, v + d), abajo=(u + d + w, v, u + d + 2 * w, v + d),
+                lado1=(u, v + d, u + d, v + d + h), frente=(u + d, v + d, u + d + w, v + d + h),
+                lado2=(u + d + w, v + d, u + 2 * d + w, v + d + h), atras=(u + 2 * d + w, v + d, u + 2 * d + 2 * w, v + d + h))
+
+
+def golem_skips():
+    """Skips (Un Show Mas): yeti de pelo blanco grisaceo, pecho sin pelo, barba blanca en el menton.
+    El golem ya tiene su forma (alto, brazos enormes, nariz grande): se le cambia el pelaje."""
+    import colorsys
+    w, h, pix = textura_ext("iron_golem/iron_golem.png")
+    azar = random.Random(11)
+    out = [list(f) for f in pix]
+    for y in range(h):
+        for x in range(w):
+            c = pix[y][x]
+            if c[3] == 0: continue
+            if es_enredadera(c):
+                out[y][x] = (0, 0, 0, 0); continue          # sin enredaderas
+            hh, s, v = colorsys.rgb_to_hsv(c[0] / 255, c[1] / 255, c[2] / 255)
+            if v < 0.2:
+                continue                                    # ojos y lineas oscuras quedan
+            v = min(1.0, 0.30 + v * 0.72)                   # pelo blanco grisaceo, con sus sombras
+            r, g, b = colorsys.hsv_to_rgb(0.66, 0.04, v)
+            out[y][x] = (round(r * 255), round(g * 255), round(b * 255), 255)
+    # Pecho sin pelo: piel gris un poco mas oscura, con los pectorales marcados.
+    x0, y0, x1, y1 = caras(*GOLEM_CUERPO)["frente"]
+    for y in range(y0, y1):
+        for x in range(x0 + 3, x1 - 3):
+            if y < y0 + 9:
+                tono = (178, 172, 180) if azar.random() < 0.8 else (168, 162, 170)
+                out[y][x] = tono + (255,)
+    for x in range(x0 + 4, x1 - 4):
+        out[y0 + 5][x] = (140, 134, 144, 255)               # linea bajo los pectorales
+    for y in range(y0 + 1, y0 + 6):
+        out[y][(x0 + x1) // 2] = (146, 140, 150, 255)       # linea al medio del pecho
+    # Barba blanca en el menton (las dos filas de abajo de la cara).
+    x0, y0, x1, y1 = caras(*GOLEM_CABEZA)["frente"]
+    for y in (y1 - 2, y1 - 1):
+        for x in range(x0 + 1, x1 - 1):
+            out[y][x] = azar.choice([(244, 244, 246), (232, 232, 236), (250, 250, 252)]) + (255,)
+    return png(w, h, out)
+
+
+def golem_traje():
+    """Golem con traje (Actions & Stuff lo tiene como "Dapper"): saco negro, camisa blanca y corbata,
+    pantalon negro, puños blancos. La cabeza y las manos siguen de hierro."""
+    w, h, pix = textura_ext("iron_golem/iron_golem.png")
+    out = [list(f) for f in pix]
+    azar = random.Random(5)
+    NEG = [(28, 28, 34), (34, 34, 40), (24, 24, 30)]
+    def pinta(x0, y0, x1, y1, paleta):
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if out[y][x][3] or pix[y][x][3]:
+                    out[y][x] = azar.choice(paleta) + (255,)
+    for y in range(h):                                      # sin enredaderas
+        for x in range(w):
+            if es_enredadera(out[y][x]): out[y][x] = (0, 0, 0, 0)
+    for k, r in caras(*GOLEM_CUERPO).items():
+        pinta(*r, NEG)
+    x0, y0, x1, y1 = caras(*GOLEM_CUERPO)["frente"]
+    medio = (x0 + x1) // 2
+    for y in range(y0, y1):                                 # camisa blanca en V y corbata
+        ancho = max(0, 3 - (y - y0) // 3)
+        for x in range(medio - ancho - 1, medio + ancho + 1):
+            out[y][x] = (236, 236, 240, 255)
+        if y < y1 - 2:
+            out[y][medio - 1] = (150, 24, 32, 255); out[y][medio] = (130, 20, 28, 255)
+    for k, r in caras(*GOLEM_CINTURA).items():
+        pinta(*r, NEG)
+    for pierna in GOLEM_PIERNAS:
+        for k, r in caras(*pierna).items():
+            if k != "abajo": pinta(*r, NEG)
+    for brazo in GOLEM_BRAZOS:                              # mangas hasta 2/3 del brazo, puño blanco
+        for k in ("lado1", "frente", "lado2", "atras"):
+            x0, y0, x1, y1 = caras(*brazo)[k]
+            corte = y0 + 19
+            pinta(x0, y0, x1, corte, NEG)
+            for x in range(x0, x1): out[corte][x] = (238, 238, 242, 255)
+        x0, y0, x1, y1 = caras(*brazo)["arriba"]
+        pinta(x0, y0, x1, y1, NEG)
+    return png(w, h, out)
+
+
+def husk_momia():
+    """Husk momia (Actions & Stuff, 3%): vendas en dos tonos con rendijas oscuras; los ojos se asoman."""
+    w, h, pix = textura_fa("zombie/husk.png")
+    TELA = [(222, 208, 172), (206, 190, 152), (230, 218, 186)]
+    RENDIJA = (120, 100, 72)
+    azar = random.Random(3)
+    # Los ojos son manchas oscuras chicas: esas se dejan. Las manchas oscuras grandes (ropa rota,
+    # piernas) se vendan igual que el resto.
+    oscuro = lambda c: c[3] > 0 and (c[0] + c[1] + c[2]) < 120
+    ojos, visto = set(), set()
+    for y0 in range(h):
+        for x0 in range(w):
+            if (x0, y0) in visto or not oscuro(pix[y0][x0]): continue
+            grupo, pila = [], [(x0, y0)]; visto.add((x0, y0))
+            while pila:
+                x, y = pila.pop(); grupo.append((x, y))
+                for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in visto and oscuro(pix[ny][nx]):
+                        visto.add((nx, ny)); pila.append((nx, ny))
+            if len(grupo) <= 6: ojos.update(grupo)
+    out = []
+    for y, fila in enumerate(pix):
+        nueva = []
+        for x, c in enumerate(fila):
+            if c[3] == 0 or (x, y) in ojos:                 # transparente u ojos: igual
+                nueva.append(c); continue
+            banda = (y + (x // 4)) % 3
+            nueva.append((RENDIJA if banda == 2 else azar.choice(TELA)) + (c[3],))
+        out.append(nueva)
+    return png(w, h, out)
+
+
+def golem_y_momia(pack):
+    carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", "iron_golem")
+    os.makedirs(carpeta, exist_ok=True)
+    open(os.path.join(carpeta, "iron_golem2.png"), "wb").write(golem_skips())
+    open(os.path.join(carpeta, "iron_golem3.png"), "wb").write(golem_traje())
+    with open(os.path.join(carpeta, "iron_golem.properties"), "w", encoding="utf-8") as f:
+        f.write("# Skips (Un Show Mas) y el golem con traje (idea de Actions & Stuff), por nombre.\n"
+                "skins.1=2\nname.1=iregex:skips\nskins.2=3\nname.2=iregex:(dapper|agent|elegante|agente)\n")
+    carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", "zombie")
+    os.makedirs(carpeta, exist_ok=True)
+    open(os.path.join(carpeta, "husk2.png"), "wb").write(husk_momia())
+    with open(os.path.join(carpeta, "husk.properties"), "w", encoding="utf-8") as f:
+        f.write("# Husk momia (idea de Actions & Stuff): sale sola 3 de cada 100, o con la etiqueta.\n"
+                "skins.1=2\nname.1=iregex:(momia|mummy|dusty)\nskins.2=1 2\nweights.2=97 3\n")
+
+
 def variantes_raras(pack):
+    golem_y_momia(pack)
     for mob, archivo, tono, smin, smult, luz, nombres, cada in RARAS:
         w, h, pix = textura_fa(archivo)
         carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", mob)
