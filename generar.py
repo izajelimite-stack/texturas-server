@@ -727,11 +727,96 @@ def props(pack):
                   open(item, "w", encoding="utf-8"), indent=1)
 
 
+# ---------------- happy ghast ----------------
+# Ideas de Actions & Stuff, con dibujo propio (arneses.py):
+#  - un diseno distinto para cada uno de los 16 arneses (cambia el arnes para todos, sin etiqueta);
+#  - globos por nombre: un happy ghast (o su cria) llamado "Globo creeper", "Globo cerdo"...
+#    se ve como ese globo, sin tentaculos y con canasta (la cria, con un hilo);
+#  - "Sin arnes" (o "Saddleless"): no se le ve el arnes, aunque lo tenga puesto y se pueda montar.
+# Los modelos parten del happy ghast de Fresh Animations (de FreshLX), modificados, con credito.
+def jem_fa(nombre):
+    lobo_fresh_animations()  # deja bajado el zip de Fresh Animations en .cache
+    z = zipfile.ZipFile(os.path.join(BASE, ".cache", "FreshAnimations_v1.10.5.zip"))
+    return json.loads(z.read(f"assets/minecraft/optifine/cem/{nombre}.jem"))
+
+
+CREDITO_GHAST = "Happy ghast de Fresh Animations por FreshLX (modrinth.com/resourcepack/fresh-animations), modificado"
+
+
+def _sin_tentaculos(jem, extras):
+    cuerpo = next(m for m in jem["models"] if m.get("part") == "body")
+    quitados = 0
+    for s in cuerpo["submodels"]:
+        if s.get("id", "").startswith("tentacle_"):
+            s["boxes"] = []           # el submodelo queda (sus animaciones no fallan), sin caja
+            quitados += 1
+    assert quitados == 9, "cambio el happy ghast de Fresh Animations"
+    for nombre, cajas in extras:
+        cuerpo["submodels"].append({"id": nombre, "invertAxis": "xy", "translate": [0, 0, 0],
+                                    "boxes": cajas})
+    jem["credit"] = CREDITO_GHAST + " como globo"
+    return jem
+
+
+def happy_ghast(pack):
+    import arneses
+    carpeta = os.path.join(pack, "assets", "minecraft", "textures", "entity", "equipment", "happy_ghast_body")
+    os.makedirs(carpeta, exist_ok=True)
+    for color, tema in arneses.TEMAS.items():
+        open(os.path.join(carpeta, color + "_harness.png"), "wb").write(png(128, 128, tema().p))
+
+    random = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", "ghast")
+    os.makedirs(random, exist_ok=True)
+    reglas, todos = "", []
+    for n, (dibujo, nombres) in enumerate(arneses.GLOBOS, start=2):
+        l = dibujo()
+        open(os.path.join(random, f"happy_ghast{n}.png"), "wb").write(png(128, 128, l.p))
+        open(os.path.join(random, f"happy_ghast_baby{n}.png"), "wb").write(png(64, 64, arneses.chico(l)))
+        reglas += f"textures.{n - 1}={n}\nname.{n - 1}=iregex:({nombres})\n"
+        todos.append(nombres)
+    aviso = "# Globos (idea de Actions & Stuff): un happy ghast o su cria con estas etiquetas se ve como globo.\n"
+    for mob in ("happy_ghast", "happy_ghast_baby"):
+        open(os.path.join(random, mob + ".properties"), "w", encoding="utf-8").write(aviso + reglas)
+
+    cem = os.path.join(pack, "assets", "minecraft", "optifine", "cem")
+    os.makedirs(cem, exist_ok=True)
+    cuerdas = [{"coordinates": [x - 0.5, -4, z - 0.5, 1, 4, 1], "textureOffset": [40, 48]}
+               for x in (-3.5, 3.5) for z in (-3.5, 3.5)]
+    canasta = [{"coordinates": [-4, -9, -4, 8, 5, 8], "textureOffset": [0, 48]}]
+    hilo = [{"coordinates": [-0.5, -10, -0.5, 1, 10, 1], "textureOffset": [40, 48]}]
+    grande = _sin_tentaculos(jem_fa("happy_ghast"), [("globo_cuerdas", cuerdas), ("globo_canasta", canasta)])
+    cria = _sin_tentaculos(jem_fa("happy_ghast_baby"), [("globo_hilo", hilo)])
+    json.dump(grande, open(os.path.join(cem, "happy_ghast2.jem"), "w", encoding="utf-8"), indent=1)
+    json.dump(cria, open(os.path.join(cem, "happy_ghast_baby2.jem"), "w", encoding="utf-8"), indent=1)
+    regla = aviso + f"models.2=2\nname.2=iregex:({'|'.join(todos)})\n"
+    for mob in ("happy_ghast", "happy_ghast_baby"):
+        open(os.path.join(cem, mob + ".properties"), "w", encoding="utf-8").write(regla)
+
+    arnes = jem_fa("happy_ghast_harness")
+    cajas = 0
+    def vaciar(p):
+        nonlocal cajas
+        if p.get("boxes"):
+            cajas += len(p["boxes"])
+            p["boxes"] = []
+        for s in p.get("submodels", []):
+            vaciar(s)
+    for m in arnes["models"]:
+        vaciar(m)
+    assert cajas == 2, "cambio el arnes de Fresh Animations"
+    arnes["credit"] = CREDITO_GHAST + " (sin cajas: arnes invisible)"
+    json.dump(arnes, open(os.path.join(cem, "happy_ghast_harness2.jem"), "w", encoding="utf-8"), indent=1)
+    open(os.path.join(cem, "happy_ghast_harness.properties"), "w", encoding="utf-8").write(
+        "# Sin arnes (idea de Actions & Stuff): no se ve el arnes, pero se puede montar igual.\n"
+        "models.2=2\nname.2=iregex:(saddleless|sin arn.s|sin montura)\n")
+
+
 def armar(version):
     pack = os.path.join(BASE, "pack")
     secretos_por_nombre(pack)
     variantes_raras(pack)
     props(pack)
+    happy_ghast(pack)
     proveedores = [{"type": "space", "advances": {"": -1, "": -8, "": -32, "": -128}}]
     for tema, inicio in (("viajes", 0xE100), ("permisos", 0xE200)):
         for filas in FILAS:
