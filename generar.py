@@ -267,6 +267,85 @@ def modelo_skylar():
     return jem
 
 
+def leer_png(d):
+    """PNG -> (ancho, alto, filas de (r, g, b, a)). Alcanza para las texturas de Minecraft."""
+    w, h = struct.unpack(">II", d[16:24]); prof, tipo = d[24], d[25]
+    pos, idat, plte, trns = 8, b"", b"", b""
+    while pos < len(d):
+        n = struct.unpack(">I", d[pos:pos + 4])[0]; t = d[pos + 4:pos + 8]; c = d[pos + 8:pos + 8 + n]
+        if t == b"IDAT": idat += c
+        elif t == b"PLTE": plte = c
+        elif t == b"tRNS": trns = c
+        pos += 12 + n
+    assert prof == 8, "solo PNG de 8 bits"
+    bpp = {6: 4, 2: 3, 3: 1, 4: 2, 0: 1}[tipo]
+    raw = zlib.decompress(idat); filas = []; prev = bytearray(w * bpp); i = 0
+    for _ in range(h):
+        f = raw[i]; i += 1; lin = bytearray(raw[i:i + w * bpp]); i += w * bpp
+        for x in range(len(lin)):
+            a = lin[x - bpp] if x >= bpp else 0; b = prev[x]; c = prev[x - bpp] if x >= bpp else 0
+            if f == 1: lin[x] = (lin[x] + a) & 255
+            elif f == 2: lin[x] = (lin[x] + b) & 255
+            elif f == 3: lin[x] = (lin[x] + (a + b) // 2) & 255
+            elif f == 4:
+                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - 2 * c)
+                lin[x] = (lin[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+        filas.append(lin); prev = lin
+    pix = []
+    for fila in filas:
+        if tipo == 6: pix.append([tuple(fila[x * 4:x * 4 + 4]) for x in range(w)])
+        elif tipo == 2: pix.append([tuple(fila[x * 3:x * 3 + 3]) + (255,) for x in range(w)])
+        elif tipo == 3: pix.append([tuple(plte[k * 3:k * 3 + 3]) + ((trns[k] if k < len(trns) else 255),) for k in fila])
+        elif tipo == 4: pix.append([(fila[x * 2],) * 3 + (fila[x * 2 + 1],) for x in range(w)])
+        else: pix.append([(v, v, v, 255) for v in fila])
+    return w, h, pix
+
+
+def textura_fa(ruta):
+    lobo_fresh_animations()  # deja bajado el zip de Fresh Animations en .cache
+    z = zipfile.ZipFile(os.path.join(BASE, ".cache", "FreshAnimations_v1.10.5.zip"))
+    return leer_png(z.read("assets/minecraft/textures/entity/" + ruta))
+
+
+def teñir(pix, tono, sat_min, sat_mult, luz=1.0, oscuro=0.16):
+    """Cambia el color de una textura conservando sus sombras; lo muy oscuro y lo blanco (ojos) queda igual."""
+    import colorsys
+    out = []
+    for fila in pix:
+        nueva = []
+        for (r, g, b, a) in fila:
+            if a == 0:
+                nueva.append((r, g, b, a)); continue
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if v < oscuro or (s < 0.12 and v > 0.92):  # ojos: lo negro y lo blanco no se tine
+                nueva.append((r, g, b, a)); continue
+            s = min(1.0, sat_min + s * sat_mult); v = min(1.0, v * luz)
+            rr, gg, bb = colorsys.hsv_to_rgb(tono, s, v)
+            nueva.append((round(rr * 255), round(gg * 255), round(bb * 255), a))
+        out.append(nueva)
+    return out
+
+
+# Variantes raras (ideas de Actions & Stuff): salen solas de vez en cuando, o con su etiqueta.
+# Mobs que ni Fresh Animations ni sus extensiones tocan con reglas propias (si no, se pisarian).
+RARAS = [
+    # (carpeta/mob, textura de FA, tono, sat_min, sat_mult, luz, nombres, una de cada N)
+    ("dolphin", "dolphin/dolphin.png", 0.95, 0.32, 0.5, 1.06, "bubblegum|chicle", 100),   # delfin rosado, 1%
+    ("allay", "allay/allay.png", 0.12, 0.60, 0.4, 1.0, "goldie|dorada|dorado", 10),        # allay dorado, 10%
+]
+
+
+def variantes_raras(pack):
+    for mob, archivo, tono, smin, smult, luz, nombres, cada in RARAS:
+        w, h, pix = textura_fa(archivo)
+        carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", mob)
+        os.makedirs(carpeta, exist_ok=True)
+        open(os.path.join(carpeta, mob + "2.png"), "wb").write(png(w, h, teñir(pix, tono, smin, smult, luz)))
+        with open(os.path.join(carpeta, mob + ".properties"), "w", encoding="utf-8") as f:
+            f.write(f"# Variante rara: sale sola 1 de cada {cada}, o con la etiqueta ({nombres}).\n"
+                    f"skins.1=2\nname.1=iregex:({nombres})\nskins.2=1 2\nweights.2={cada - 1} 1\n")
+
+
 # Las 9 razas de lobo de 26.x, cada una con su textura normal, mansa y enojada. Un lobo llamado
 # Skylar usa la de ella en cualquiera (Entity Texture Features, del modpack).
 LOBOS = ["wolf", "wolf_ashen", "wolf_black", "wolf_chestnut", "wolf_rusty", "wolf_snowy",
@@ -295,6 +374,7 @@ def secretos_por_nombre(pack):
 def armar(version):
     pack = os.path.join(BASE, "pack")
     secretos_por_nombre(pack)
+    variantes_raras(pack)
     proveedores = [{"type": "space", "advances": {"": -1, "": -8, "": -32, "": -128}}]
     for tema, inicio in (("viajes", 0xE100), ("permisos", 0xE200)):
         for filas in FILAS:
