@@ -103,7 +103,10 @@ BLANCO = [(242, 239, 231), (233, 229, 219), (248, 246, 240), (224, 219, 207)]
 CREMA = [(232, 224, 205), (222, 212, 190)]
 RUBIO = [(226, 188, 132), (212, 170, 112), (232, 198, 146)]
 GRIS = [(150, 146, 140), (120, 116, 112)]
-OJO = (92, 60, 40)
+# Los ojos de Fresh Animations son una fila de 2 pixeles con una pupila de 1 que se mueve encima.
+# Con la fila cafe clara se veia un ojo cafe raro con un punto negro paseando (Fran: "la retina
+# se ve rara"). Ahora es cafe casi negro, como sus ojos en las fotos: la pupila apenas se nota.
+OJO = (62, 40, 28)
 PUPILA = (10, 9, 10)
 OREJA = [(36, 31, 30), (48, 41, 38), (28, 25, 26), (60, 50, 44)]
 NARIZ = (14, 13, 15)
@@ -212,6 +215,149 @@ def skylar():
     caja(*c["arriba"], NEGRO); caja(*c["abajo"], BLANCO)
     caja(9, 20, 17, 28, NEGRO); caja(9, 25, 17, 28, BLANCO)
     return png(64, 32, pix)
+
+
+# ---------------- Fulgencio ----------------
+# El gato de Fran: crema anaranjado con rayas suaves (mas marcadas en patas y cola), hocico, menton
+# y pecho blancos, nariz rosada, ojos amarillo verdosos, patitas claras y un collar azul con un
+# disco plateado en un estuche verde oscuro. Sale del gato naranjo de Fresh Animations (de FreshLX),
+# aclarado y repintado. La cria usa el modelo normal del juego, asi que su textura sale del gatito
+# naranjo del juego, aclarado igual.
+# Textura del gato (64x32, la de Fresh Animations):
+#   cabeza 5x4x5 en (0, 0): cara (5..9, 5..8), menton (10..14, 0..4)
+#   ojos de Fresh Animations: fila de 2 en (0..1, 4) y (3..4, 4), pupila en (1, 3) y (3, 3)
+#   hocico 3x2x1 en (1, 25): frente (2..4, 26..27), nariz al medio de la fila 26
+#   orejas 1x1x2 en (0, 10) y (6, 10); por dentro, (0..1, 12) y (9..10, 12)
+#   cuerpo 4x16x6 en (20, 0): pecho (26..29, 0..5), guata (26..29, 6..21), costados (20..25) y
+#     (30..35), lomo (36..39); la fila 6 de los costados es la del cuello (ahi va el collar)
+#   cola 1x8x1 en (0, 15) y (4, 15); patas de adelante 2x10x2 en (40, 0), de atras 2x6x2 en (8, 13)
+FULGENCIO_OJO = (196, 190, 92)
+FULGENCIO_BLANCO = [(244, 235, 220), (238, 226, 208), (247, 240, 228)]
+FULGENCIO_NARIZ = (203, 136, 128)
+
+
+def _gato_crema(pix):
+    """Pasa un gato naranjo a crema anaranjado: menos color y mas luz, sin perder las rayas."""
+    import colorsys
+    out = []
+    for fila in pix:
+        nueva = []
+        for (r, g, b, a) in fila:
+            hh, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if a and s < 0.12:                        # blancos: blanco tibio
+                nueva.append(FULGENCIO_BLANCO[(r + g) % 3] + (a,))
+                continue
+            if a and 0.04 < hh < 0.16:
+                oscura = max(0.0, 0.11 - hh) * 4      # las rayas del naranjo son mas rojizas
+                s2 = s * 0.54 + oscura * 0.2
+                v2 = min(1.0, v * 0.95 + 0.01 - oscura * 0.4)
+                rr, gg, bb = colorsys.hsv_to_rgb(hh - 0.025, s2, v2)
+                nueva.append((round(rr * 255), round(gg * 255), round(bb * 255), a))
+                continue
+            nueva.append((r, g, b, a))
+        out.append(nueva)
+    return out
+
+
+def fulgencio():
+    w, h, pix = textura_fa("cat/cat_red.png")
+    assert (w, h) == (64, 32), "cambio el gato de Fresh Animations"
+    pix = _gato_crema(pix)
+    def pon(x, y, c):
+        pix[y][x] = c + (255,)
+    blanco = lambda x, y: FULGENCIO_BLANCO[(x * 7 + y * 3) % 3]
+    # Ojos: la fila del ojo es el iris amarillo verdoso y la pupila, negra.
+    for x in (0, 1, 3, 4):
+        pon(x, 4, FULGENCIO_OJO)
+    pon(1, 3, (22, 20, 16)); pon(3, 3, (22, 20, 16))
+    # Menton y garganta blancos.
+    for y in range(0, 5):
+        for x in range(10, 15):
+            pon(x, y, blanco(x, y))
+    # Hocico blanco con la nariz rosada al medio y la boca apenas marcada.
+    for x in range(1, 9):
+        for y in (25, 26, 27):
+            if pix[y][x][3]:
+                pon(x, y, blanco(x, y))
+    pon(3, 26, FULGENCIO_NARIZ)                    # nariz chica: a los lados sigue el blanco
+    pon(3, 27, (222, 204, 190))
+    # Cara: blanco bajo los ojos, a los lados del hocico. En la frente queda solo la raya del medio.
+    for x in (5, 9):
+        pon(x, 8, (240, 222, 198))
+    pix[5][6] = pix[5][5]; pix[5][8] = pix[5][9]
+    # Orejas: rosadas por dentro.
+    for x, y in ((0, 12), (1, 12), (9, 12), (10, 12)):
+        pon(x, y, (228, 168, 156))
+    # Pecho y guata blancos.
+    for y in range(0, 6):
+        for x in range(26, 30):
+            pon(x, y, blanco(x, y))
+    for y in range(6, 22):
+        for x in range(26, 30):
+            if x in (27, 28) or y < 12:
+                pon(x, y, blanco(x, y))
+    # Patitas claras (las dos filas de abajo de cada pata).
+    for y in (10, 11):
+        for x in range(40, 48):
+            pon(x, y, blanco(x, y))
+    for y in (19, 20):
+        for x in range(8, 16):
+            pon(x, y, blanco(x, y))
+    # Anillos en la cola, un poco mas oscuros.
+    for x0 in (0, 4):
+        for y in range(16, 24):
+            if (y - 16) % 3 == 1:
+                for x in range(x0, x0 + 4):
+                    r, g, b, a = pix[y][x]
+                    pix[y][x] = (round(r * 0.9), round(g * 0.86), round(b * 0.82), a)
+    # Collar azul marino (donde el juego dibuja el collar) con dibujitos claros, y el estuche verde
+    # oscuro con el disco plateado colgando en el pecho.
+    for x, y in [(x, 3) for x in range(26, 30)] + [(x, 6) for x in range(20, 24)] + [(x, 6) for x in range(32, 40)]:
+        pon(x, y, (238, 168, 92) if (x + y) % 4 == 0 else (34, 48, 112))
+    pon(26, 4, (36, 62, 54)); pon(29, 4, (36, 62, 54)); pon(26, 5, (36, 62, 54)); pon(29, 5, (36, 62, 54))
+    pon(27, 4, (226, 229, 233)); pon(28, 4, (196, 200, 206)); pon(27, 5, (196, 200, 206)); pon(28, 5, (168, 172, 180))
+    return pix
+
+
+# El gatito naranjo del juego (26.2), desde el espejo de assets de misode/mcmeta.
+GATITO_URL = "https://raw.githubusercontent.com/misode/mcmeta/26.2-assets/assets/minecraft/textures/entity/cat/cat_red_baby.png"
+
+
+def fulgencio_cria():
+    cache = os.path.join(BASE, ".cache", "cat_red_baby.png")
+    if not os.path.exists(cache):
+        open(cache, "wb").write(urllib.request.urlopen(GATITO_URL, timeout=60).read())
+    w, h, pix = leer_png(open(cache, "rb").read())
+    pix = _gato_crema(pix)
+    for y in range(h):                                # ojos verdes del gatito -> los de Fulgencio
+        for x in range(w):
+            r, g, b, a = pix[y][x]
+            if a and g > r + 30 and g > b + 30:
+                pix[y][x] = FULGENCIO_OJO + (a,)
+    return w, h, pix
+
+
+GATOS = ["all_black", "black", "british_shorthair", "calico", "jellie", "persian", "ragdoll",
+         "red", "siamese", "tabby", "white"]
+
+
+def gato_fulgencio(pack):
+    carpeta = os.path.join(pack, "assets", "minecraft", "optifine", "random", "entity", "cat")
+    os.makedirs(carpeta, exist_ok=True)
+    regla = "# Secreto: un gato con la etiqueta Fulgencio se ve como el gato de Fran.\ntextures.2=2\nname.2=ipattern:Fulgencio\n"
+    grande = png(64, 32, fulgencio())
+    cw, ch, cria = fulgencio_cria()
+    chico = png(cw, ch, cria)
+    for raza in GATOS:
+        for nombre, textura in ((f"cat_{raza}", grande), (f"cat_{raza}_baby", chico)):
+            open(os.path.join(carpeta, nombre + "2.png"), "wb").write(textura)
+            open(os.path.join(carpeta, nombre + ".properties"), "w", encoding="utf-8").write(regla)
+    # Su collar ya va pintado (azul, con el disco): el collar de color del juego no se le dibuja.
+    vacio = png(64, 32, [[(0, 0, 0, 0)] * 64 for _ in range(32)])
+    open(os.path.join(carpeta, "cat_collar2.png"), "wb").write(vacio)
+    open(os.path.join(carpeta, "cat_collar.properties"), "w", encoding="utf-8").write(
+        "# Fulgencio ya trae su collar azul pintado: el de color del juego no se le dibuja encima.\n"
+        "textures.2=2\nname.2=ipattern:Fulgencio\n")
 
 
 # El lobo de Fresh Animations, para hacer la version de Skylar.
@@ -834,6 +980,7 @@ def happy_ghast(pack):
 def armar(version):
     pack = os.path.join(BASE, "pack")
     secretos_por_nombre(pack)
+    gato_fulgencio(pack)
     variantes_raras(pack)
     props(pack)
     happy_ghast(pack)
