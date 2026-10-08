@@ -156,16 +156,17 @@ def skylar():
     fijo(12, 12, NEGRO[1]); fijo(15, 12, NEGRO[1])
     fijo(12, 11, PUPILA); fijo(15, 11, PUPILA)
 
-    # Hocico corto (el de ella es chato): u1 v11, 3x2x2. Blanco, con la nariz negra ancha arriba
-    # (asi queda separada de la frente por la fila blanca de la cara).
-    c = desplegar(1, 11, 3, 2, 2)
+    # Hocico: u1 v11, 3x3x2 (alto como el de ella, pero corto hacia adelante). Blanco: arriba el
+    # puente blanco, al medio la nariz negra redonda, abajo la boca. Asi la nariz queda sobre blanco
+    # y no se junta con la frente negra.
+    c = desplegar(1, 11, 3, 3, 2)
     for k in ("arriba", "abajo", "lado1", "lado2", "atras", "frente"):
         caja(*c[k], BLANCO)
-    ax, ay = c["arriba"][:2]                       # arriba: la fila de abajo es la punta
-    fijo(ax + 1, ay + 1, NARIZ)
     fx, fy = c["frente"][:2]
-    fijo(fx, fy, (64, 58, 60)); fijo(fx + 1, fy, NARIZ); fijo(fx + 2, fy, (64, 58, 60))  # nariz redonda
-    pinta(fx, fy + 1, BLANCO); fijo(fx + 1, fy + 1, (110, 102, 100)); pinta(fx + 2, fy + 1, BLANCO)  # boca
+    fijo(fx, fy + 1, (64, 58, 60)); fijo(fx + 1, fy + 1, NARIZ); fijo(fx + 2, fy + 1, (64, 58, 60))  # nariz redonda
+    fijo(fx + 1, fy + 2, (110, 102, 100))          # boca
+    fijo(c["lado1"][2] - 1, c["lado1"][1] + 1, (64, 58, 60))  # costados de la nariz
+    fijo(c["lado2"][0], c["lado2"][1] + 1, (64, 58, 60))
 
     # Orejas largas que cuelgan (partes nuevas del modelo): 1x5x3, negras y rizadas, con el brillo
     # tibio que tienen los rizos en las fotos (asi se distinguen de la cabeza).
@@ -258,9 +259,10 @@ def modelo_skylar():
     cabeza["submodels"].append(parte("oreja_skylar_d", [3.5, 2, -2], [-0.5, -5, -1.5, 1, 5, 3], OREJA_UV))
     # Copete rizado arriba de la cabeza, hacia adelante.
     cabeza["submodels"].append(parte("copete_skylar", [0, 2.5, -3], [-2, 0, -1.5, 4, 1, 3], COPETE_UV))
-    # Hocico corto y chato (el de Fresh Animations es 3x3x3 y en ella se veia como un bloque grande):
-    # 3 de ancho, 2 de alto y 2 de largo, abajo en la cara. Mismo nombre, asi lo siguen animando.
-    hocico["boxes"] = [{"coordinates": [-1.5, 0, -2, 3, 2, 2], "textureOffset": [1, 11]}]
+    # Hocico corto (el de Fresh Animations es 3x3x3 y en ella se veia como un bloque largo): 3 de
+    # ancho y 3 de alto como el de ella, pero solo 2 de largo. Mismo nombre, asi lo siguen animando.
+    # (Con 2 de alto, Fran lo encontro muy bajo y raro.)
+    hocico["boxes"] = [{"coordinates": [-1.5, 0, -2, 3, 3, 2], "textureOffset": [1, 11]}]
     jem["credit"] = "Lobo de Fresh Animations por FreshLX (modrinth.com/resourcepack/fresh-animations), modificado para Skylar"
     return jem
 
