@@ -806,9 +806,29 @@ def happy_ghast(pack):
     assert cajas == 2, "cambio el arnes de Fresh Animations"
     arnes["credit"] = CREDITO_GHAST + " (sin cajas: arnes invisible)"
     json.dump(arnes, open(os.path.join(cem, "happy_ghast_harness2.jem"), "w", encoding="utf-8"), indent=1)
+    # Alas que aletean: el arnes celeste lleva alas de allay y el negro, de dragon (en Actions & Stuff esos
+    # dos tienen animacion propia). Son planos pegados arriba de los costados; uno con la textura en
+    # espejo para que queden parejos. El arnes se reconoce por lo que el ghast tiene puesto (nbt).
+    for n, color, (u, v, w, d), z, vel, amp in ((3, "light_blue", arneses.ALA_ALLAY, 0, 0.55, 0.45),
+                                                (4, "black", arneses.ALA_DRAGON, 1, 0.18, 0.5)):
+        jem = jem_fa("happy_ghast_harness")
+        cuerpo = next(m for m in jem["models"] if m.get("part") == "body")
+        for nombre, lado in (("ala_i", 1), ("ala_d", -1)):
+            ala = {"id": nombre, "invertAxis": "xy", "translate": [8 * lado, 15, z],
+                   "boxes": [{"coordinates": [0 if lado > 0 else -w, 0, -d / 2, w, 0, d], "textureOffset": [u, v]}]}
+            if lado > 0:
+                ala["mirrorTexture"] = "u"
+            cuerpo["submodels"].append(ala)
+        cuerpo["animations"] = [{"ala_i.rz": f"sin(age*{vel})*{amp}+0.2",
+                                 "ala_d.rz": f"-(sin(age*{vel})*{amp}+0.2)"}]
+        jem["credit"] = CREDITO_GHAST + f" (con alas, arnes {color})"
+        json.dump(jem, open(os.path.join(cem, f"happy_ghast_harness{n}.jem"), "w", encoding="utf-8"), indent=1)
     open(os.path.join(cem, "happy_ghast_harness.properties"), "w", encoding="utf-8").write(
         "# Sin arnes (idea de Actions & Stuff): no se ve el arnes, pero se puede montar igual.\n"
-        "models.2=2\nname.2=iregex:(saddleless|sin arn.s|sin montura)\n")
+        "models.2=2\nname.2=iregex:(saddleless|sin arn.s|sin montura)\n"
+        "# Arnes celeste: alas de allay. Arnes negro: alas de dragon.\n"
+        "models.3=3\nnbt.3.equipment.body.id=minecraft:light_blue_harness\n"
+        "models.4=4\nnbt.4.equipment.body.id=minecraft:black_harness\n")
 
 
 def armar(version):

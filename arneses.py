@@ -195,6 +195,20 @@ def voronoi(i, j, paso, semilla):
     return mejores[0], mejores[1]
 
 
+def ala_plana(l, ala, color):
+    """Pinta un ala plana (caja de alto 0) arriba y abajo. ala = (u, v, ancho, largo) en el formato
+    de 64, como en el modelo; color(c, r): c 0 = pegada al cuerpo, r 0 = atras."""
+    u, v, w, d = ala
+    for x0 in (2 * (u + d), 2 * (u + d + w)):        # cara de arriba y cara de abajo
+        for r in range(2 * d):
+            for c in range(2 * w):
+                l.pon(x0 + c, 2 * v + r, color(c, r))
+
+
+# Alas que aletean en el arnes celeste (allay) y en el negro (dragon): van en un espacio libre de la textura.
+ALA_ALLAY = (0, 44, 6, 8)
+ALA_DRAGON = (0, 44, 9, 10)
+
 CUERO = [h("#3b2414"), h("#5a3820"), h("#7a4d2c"), h("#94643a")]
 CORREA = [h("#3b2414"), h("#5a3820"), h("#7a4d2c")]
 PLATA = [h("#5d5f68"), h("#c2c5cc")]
@@ -355,6 +369,26 @@ def allay():
     correas(l, [h("#2f6f99"), h("#4f98c4"), h("#87c6ea")], PLATA)
     antiparras(l, [h("#2f6f99"), h("#4f98c4"), h("#87c6ea")], [h("#d6f4ff"), h("#ffffff")],
                [h("#2f6f99"), h("#4f98c4")])
+    pluma = [
+        "oooo........",
+        "owwwoo......",
+        "owwwwwoo....",
+        "owwbwwwwo...",
+        "owwwbwwwwo..",
+        "owwwwbwwwwo.",
+        "owwwwwbwwwwo",
+        "owwwwwwbwwwo",
+        "owwwwwwwbwwo",
+        "owwwwwwwwbwo",
+        "owwwwwwwwwwo",
+        "owwwwwwwwwo.",
+        "owwwwwwwwo..",
+        "owwwwwwwo...",
+        "oowwwwoo....",
+        "..oooo......",
+    ]
+    colores = {"o": h("#5f9fcf"), "w": h("#eef9ff"), "b": h("#bfe6fb")}
+    ala_plana(l, ALA_ALLAY, lambda c, r: colores.get(pluma[r][c]))
     return l
 
 
@@ -771,7 +805,34 @@ def dragon():
     correas(l, [h("#0d0b10"), h("#1f1a26"), h("#33283f")], [h("#3a3046"), h("#8a7aa0")])
     antiparras(l, [h("#0d0b10"), h("#241e2b"), h("#3a3046")], [h("#b65cff"), h("#efd0ff")],
                [h("#0d0b10"), h("#1f1a26")])
+    ala_plana(l, ALA_DRAGON, ala_de_dragon)
     return l
+
+
+def ala_de_dragon(c, r):
+    """Ala de murcielago de 18x20: c 0 = pegada al cuerpo, r 19 = borde de adelante (el hueso)."""
+    W, D = 18, 20
+    huesos = [(0, 1), (7, 2), (13, 6), (17, 11)]      # (columna, fila del borde de atras)
+
+    def borde(x):                                     # fila donde empieza la membrana, con curvas
+        for (c0, r0), (c1, r1) in zip(huesos, huesos[1:]):
+            if c0 <= x <= c1:
+                t = (x - c0) / (c1 - c0)
+                return r0 + (r1 - r0) * t + 3.2 * math.sin(math.pi * t)
+        return D
+    if r < borde(c):
+        return None
+    muneca = (11, 18)
+    for (c0, r0) in huesos[1:]:                       # dedos: de la muneca a cada punta
+        pasos = max(abs(c0 - muneca[0]), abs(r0 - muneca[1]))
+        for k in range(pasos + 1):
+            if (round(muneca[0] + (c0 - muneca[0]) * k / pasos), round(muneca[1] + (r0 - muneca[1]) * k / pasos)) == (c, r):
+                return h("#6d6577")
+    if r >= 18 and c <= muneca[0]:                    # el brazo, por el borde de adelante
+        return h("#6d6577") if r == 18 else h("#4a4452")
+    if r < borde(c) + 1:
+        return h("#120e16")
+    return h("#3b2a4f") if ruido(c // 3, r // 3, 131) > 0.6 else h("#2a1f33")
 
 
 TEMAS = {
